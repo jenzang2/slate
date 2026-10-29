@@ -50,7 +50,11 @@ button{cursor:pointer}
   background:var(--tally);box-shadow:0 0 0 2px var(--ink);
 }
 .brand-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
-.brand-txt b{font:700 12px/1 var(--mono);letter-spacing:.34em;text-transform:uppercase}
+.brand-txt b{font:700 12px/1 var(--mono);letter-spacing:.3em;text-transform:uppercase;display:flex;align-items:center}
+.bp{
+  font-family:var(--sans);font-weight:800;letter-spacing:-.015em;text-transform:none;
+  font-size:12.5px;padding-right:10px;margin-right:10px;border-right:1px solid rgba(255,255,255,.26);
+}
 .brand-txt span{font-size:11px;color:#8FA099;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .spacer{flex:1}
 .actions{display:flex;align-items:center;gap:7px}
@@ -65,6 +69,7 @@ button{cursor:pointer}
 .btn.solid{background:#fff;color:var(--ink);border-color:#fff}
 .btn.solid:hover{background:#EDF3EE;border-color:#EDF3EE}
 .btn.ghost{border-color:transparent;color:#BAC7C0}
+.vsep{width:1px;height:20px;background:rgba(255,255,255,.16);margin:0 3px}
 .btn.ghost:hover{color:#fff;background:rgba(255,255,255,.07)}
 
 /* ── 컨트롤 스트립 ─────────────────────── */
@@ -85,7 +90,6 @@ button{cursor:pointer}
 }
 .txt:focus{border-color:var(--sage-300);box-shadow:0 0 0 3px #E4EFE7;background:#fff}
 #pTitle{width:198px}
-#pDate{width:142px}
 select.txt{padding-right:24px;appearance:none;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236C7873' stroke-width='3'><path d='M5 9l7 7 7-7'/></svg>");
   background-repeat:no-repeat;background-position:right 8px center;font-size:12.5px}
@@ -134,12 +138,15 @@ select.txt{padding-right:24px;appearance:none;
 .sheet-head h1:empty::before{content:attr(data-ph);color:#9DAEA5}
 .sheet-head h1:focus{background:#fff8;border-radius:6px;box-shadow:0 0 0 4px #fff8}
 .pg{position:absolute;right:0;top:1px;font:600 9.5px/1 var(--mono);letter-spacing:.16em;color:#8B9992}
-.sheet-date{
-  position:absolute;right:0;top:0;font-size:10px;font-weight:600;color:#7C8B83;
-  letter-spacing:.01em;outline:none;border-radius:4px;padding:1px 3px;
+.castrow{display:flex;gap:8px;margin-top:7px;align-items:flex-start}
+.castrow .cl{padding-top:6px}
+.cast{
+  flex:1;min-width:0;height:40px;overflow:auto;background:#F2F8F3;border-radius:6px;
+  padding:5px 10px;font-size:10.5px;line-height:1.55;font-weight:600;color:#1B2721;
+  white-space:pre-wrap;word-break:break-word;outline:none;scrollbar-width:thin;
 }
-.sheet-date:empty::before{content:attr(data-ph);color:#AEBAB3}
-.sheet-date:focus{background:#fff;box-shadow:0 0 0 3px #E7F1E9;color:#111}
+.cast:empty::before{content:attr(data-ph);color:#93A29A;font-weight:500}
+.cast:focus{background:#fff;box-shadow:0 0 0 2px #fff,0 0 0 3.5px #9EC2A9}
 .credits{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:11px}
 .credit{display:flex;align-items:center;gap:6px;min-width:0}
 .cl{
@@ -232,7 +239,19 @@ select.txt{padding-right:24px;appearance:none;
 .screen{margin-top:6px;padding-top:6px;border-top:1px solid #EFF3EF}
 .dlg{margin-top:5px;padding-top:5px;border-top:1px solid #EFF3EF}
 .dlg .lbl{color:#2F4A38}
-.dlg .field{font-size:11px;color:#1D2A23;padding-left:6px;border-left:2px solid #CFE0D5}
+.dlgrows{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:start}
+.dlgrow{display:contents}
+.dlgspk,.dlgsay{
+  font-size:11px;line-height:1.5;color:#1D2A23;white-space:pre-wrap;word-break:break-word;
+  outline:none;border-radius:4px;min-height:16.5px;padding:0 1px;
+  transition:box-shadow .15s,background .15s;
+}
+.dlgspk{font-weight:700;color:#2A4234;padding-right:7px;max-width:7.5em;border-right:1.5px solid #CFE0D5}
+.dlgsay{padding-left:8px;font-weight:400}
+.dlgspk:empty::before{content:attr(data-ph);color:#C4CFC8;font-weight:500}
+.dlgsay:empty::before{content:attr(data-ph);color:var(--faint);font-weight:400}
+.dlgspk:empty + .dlgsay{font-style:italic;color:#43524B}
+.dlgspk:focus,.dlgsay:focus{box-shadow:0 0 0 3px #E7F1E9;background:#F7FBF7}
 .etc{margin-top:5px;padding-top:5px;border-top:1px dashed #EEF2EE}
 .etc .lbl{color:#7B8881;letter-spacing:.06em;font-weight:800;font-size:9px}
 .etc .field{font-size:10.5px;color:#4A5852}
@@ -255,6 +274,7 @@ select.txt{padding-right:24px;appearance:none;
 .foot p{margin:0;font-size:11px;color:#7C8983;line-height:1.6;max-width:640px}
 .foot kbd{font:600 10px/1 var(--mono);background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:3px 5px;color:#4C5A53}
 .foot .link{border:0;background:transparent;color:#3E6B4F;font-size:11.5px;font-weight:700;text-decoration:none;border-bottom:1px solid #B9D2C1;padding:0 0 2px;white-space:nowrap}
+.flinks{display:flex;gap:16px;align-items:center;flex:0 0 auto}
 
 /* ── 토스트 ───────────────────────────── */
 .toast{
@@ -267,6 +287,43 @@ select.txt{padding-right:24px;appearance:none;
 .toast i{width:6px;height:6px;border-radius:50%;background:#7CC08E;display:block}
 
 /* ── 프린트 ───────────────────────────── */
+/* ── 프로젝트 모달 ─────────────────────── */
+.modal{position:fixed;inset:0;z-index:300;background:rgba(11,16,14,.52);backdrop-filter:blur(3px);
+  display:flex;align-items:flex-start;justify-content:center;padding:64px 16px 28px;overflow:auto}
+.modal[hidden]{display:none}
+.panel{width:100%;max-width:600px;background:#fff;border-radius:16px;overflow:hidden;
+  box-shadow:0 34px 70px -24px rgba(8,14,11,.6);animation:pop .18s ease-out}
+@keyframes pop{from{transform:translateY(8px) scale(.99);opacity:0}to{transform:none;opacity:1}}
+.panel-head{display:flex;align-items:center;gap:10px;padding:15px 16px 14px 18px;border-bottom:1px solid var(--line-2)}
+.panel-head h2{margin:0;font-size:14.5px;font-weight:800;letter-spacing:-.02em;flex:1;display:flex;align-items:center;gap:7px}
+.panel-head h2 em{font-style:normal;font:700 10px/1 var(--mono);letter-spacing:.08em;color:#5C8A6A;background:#EAF3EC;border-radius:99px;padding:4px 7px}
+.px{border:0;background:#F1F6F2;width:29px;height:29px;border-radius:8px;display:grid;place-items:center;color:#5A6A62;flex:0 0 auto}
+.px:hover{background:#E5EFE7;color:#12171A}
+.plist{max-height:min(58vh,430px);overflow:auto;padding:7px}
+.pitem{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;transition:.12s;
+  cursor:pointer;border:1px solid transparent}
+.pitem:hover{background:#F6FAF6;border-color:#E7EFE8}
+.pitem.on{background:#EDF5EE;border-color:#CFE3D4}
+.pthumb{width:54px;height:32px;border-radius:5px;flex:0 0 auto;border:1px solid #E3EBE4;
+  background:repeating-linear-gradient(135deg,#F2F7F3 0 5px,#EAF2EC 5px 10px);
+  display:grid;place-content:center;text-align:center;font:700 8px/1.15 var(--mono);color:#7E948A;letter-spacing:.02em}
+.pbody{flex:1;min-width:0}
+.pname{font-size:13px;font-weight:700;color:#0F1613;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.015em}
+.pmeta{font-size:10.5px;color:#8A968F;margin-top:3px;display:flex;align-items:center;gap:5px}
+.pmeta .dot{width:3px;height:3px;border-radius:50%;background:#C3CEC7;display:block}
+.pacts{display:flex;gap:1px;opacity:0;transition:.12s;flex:0 0 auto}
+.pitem:hover .pacts,.pitem.on .pacts{opacity:1}
+.pacts button{border:0;background:transparent;width:25px;height:25px;border-radius:6px;
+  display:grid;place-items:center;color:#7C8A83}
+.pacts button:hover{background:#EFF5F0;color:#12171A}
+.pacts button[data-act="del"]:hover{background:#FCEDEA;color:#C2412C}
+.panel-foot{padding:11px 16px;border-top:1px solid var(--line-2);background:#FAFDFA;display:flex;gap:8px;align-items:center}
+.panel-foot .hint{font-size:10.5px;color:#8A968F;flex:1;line-height:1.45}
+.pbtn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;color:#2B3A33;display:inline-flex;align-items:center;gap:6px}
+.pbtn:hover{background:#F2F8F3;border-color:#CFE3D4}
+.pbtn.dark{background:#12171A;color:#fff;border-color:#12171A}
+.pbtn.dark:hover{background:#243430;border-color:#243430}
+
 @media print{
   @page{size:A4 landscape;margin:6mm}
   html,body{background:#fff!important}
@@ -288,8 +345,12 @@ select.txt{padding-right:24px;appearance:none;
   .grid .addtile{display:none!important}
   .sheet-head{margin-bottom:8px!important}
   .sheet-head h1{font-size:15px!important;margin-bottom:3px!important;letter-spacing:-.03em!important}
-  .sheet-date{font-size:8px!important;top:-1px!important}
   .credits{gap:5px!important;margin-top:5px!important}
+  .castrow{gap:5px!important;margin-top:4px!important}
+  .castrow .cl{padding-top:4px!important}
+  .cast{height:32px!important;font-size:8.4px!important;line-height:1.45!important;padding:3px 7px!important;
+        border-radius:4px!important;overflow:hidden!important;
+        column-count:2;column-gap:12px;column-fill:balance}
   .cl{font-size:7.5px!important;letter-spacing:.02em!important}
   .cv{height:18px!important;font-size:9px!important;padding:0 6px!important;border-radius:4px!important}
   .ml{display:none!important}
@@ -302,12 +363,19 @@ select.txt{padding-right:24px;appearance:none;
   .frame{margin-top:3px!important}
   .screen{margin-top:4px!important;padding-top:4px!important}
   .dlg{margin-top:3px!important;padding-top:3px!important}
-  .dlg .field{font-size:9.3px!important;padding-left:5px!important}
+  .dlgspk,.dlgsay{font-size:9.3px!important;line-height:1.42!important;min-height:0!important;color:#1D2A23!important}
+  .dlgspk{padding-right:5px!important;border-right-width:1px!important;border-right-color:#CFE0D5!important}
+  .dlgsay{padding-left:5px!important}
+  .dlgspk:empty + .dlgsay{font-style:italic!important;color:#3D4C45!important}
+  .dlgspk:empty::before{content:'NAR.'!important;font:700 7.4px/1.45 var(--mono)!important;
+    color:#93A199!important;letter-spacing:.04em}
+  .dlgrow[data-empty="1"]{display:none!important}
   .etc{margin-top:3px!important;padding-top:3px!important}
   .etc .lbl{font-size:7.5px!important}
   .etc .field{font-size:8.5px!important}
-  .field:empty::before,.cv:empty::before,.sheet-date:empty::before,.sheet-head h1:empty::before{content:none!important}
-  .cut .dlg:has(.field:empty),.cut .etc:has(.field:empty){display:none!important}
+  .field:empty::before,.cv:empty::before,.cast:empty::before,.sheet-head h1:empty::before{content:none!important}
+  .dlgsay:empty::before{content:none!important}
+  .cut .dlg[data-off="1"],.cut .etc:has(.field:empty){display:none!important}
   .field:focus{box-shadow:none;background:transparent}
   .sheet-head h1:focus{box-shadow:none;background:transparent}
 }
@@ -331,12 +399,21 @@ select.txt{padding-right:24px;appearance:none;
   <div class="brand">
     <div class="mark" aria-hidden="true"></div>
     <div class="brand-txt">
-      <b>Slate</b>
+      <b><span class="bp">덕선필름</span>Slate</b>
       <span>스토리보드 메이커 · 촬영용 컷시트</span>
     </div>
   </div>
   <div class="spacer"></div>
   <div class="actions">
+    <button class="btn" id="btnNewProject" title="새 스토리보드 만들기 (Ctrl+Alt+N)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 12v5M9.5 14.5h5"/></svg>
+      <span class="label">새 스토리보드</span>
+    </button>
+    <button class="btn ghost" id="btnProjects" title="내 스토리보드 목록 (Ctrl+O)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span class="label">프로젝트</span>
+    </button>
+    <span class="vsep" aria-hidden="true"></span>
     <button class="btn" id="btnAdd" title="컷 추가 (Alt+N)">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       <span class="label">컷 추가</span>
@@ -357,7 +434,6 @@ select.txt{padding-right:24px;appearance:none;
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
       인쇄 / PDF
     </button>
-    <button class="btn ghost" id="btnSample" title="예시 내용 채우기">예시</button>
   </div>
 </header>
 
@@ -365,10 +441,6 @@ select.txt{padding-right:24px;appearance:none;
   <div class="group">
     <label for="pTitle">프로젝트 제목</label>
     <input class="txt" id="pTitle" placeholder="예: 유튜브 5&quot; 티저" spellcheck="false">
-  </div>
-  <div class="group">
-    <label for="pDate">작성일자</label>
-    <input class="txt" id="pDate" placeholder="2026년 1월 1일" spellcheck="false">
   </div>
 
   <div class="vdiv" aria-hidden="true"></div>
@@ -421,7 +493,26 @@ select.txt{padding-right:24px;appearance:none;
     화면은 <kbd>Ctrl</kbd>+<kbd>P</kbd>로 PDF 저장. 작업 내용은 <b>이 컴퓨터의 이 브라우저</b>에만 저장되니,
     다른 컴으로 옮기려면 <b>HTML로 저장</b>을 눌러 나온 파일을 그대로 가지고 가세요.
   </p>
-  <button class="link" id="btnReset">전체 비우고 새로 시작</button>
+  <div class="flinks">
+    <button class="link" id="btnSample">예시 내용 채우기</button>
+    <button class="link" id="btnReset">이 프로젝트 비우기</button>
+  </div>
+</div>
+
+<div class="modal" id="projects" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="plTitle">
+    <div class="panel-head">
+      <h2 id="plTitle">스토리보드 <em id="plCount">0</em></h2>
+      <button class="px" data-close="1" title="닫기" aria-label="닫기">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="plist" id="plist"></div>
+    <div class="panel-foot">
+      <span class="hint">같은 브라우저에만 저장됩니다. 옮기려면 <b>HTML로 저장</b>.</span>
+      <button class="pbtn dark" id="plNew">＋ 새 스토리보드</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"><i></i><span id="toastMsg"></span></div>
@@ -445,9 +536,9 @@ const MOVES=['고정','팬','틸트','달리','트래킹','핸드헬드','크레
 
 const tool={color:'#12171A',size:5,eraser:false};
 const todayKR=()=>{const d=new Date();return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';};
-const blank=()=>({id:nid(),title:'',screen:'',line:'',etc:'',canvas:null,size:'',move:'',sec:''});
+const blank=()=>({id:nid(),title:'',screen:'',dlg:[{s:'',t:''}],etc:'',canvas:null,size:'',move:'',sec:''});
 const DEFAULTS=()=>({
-  title:'',date:todayKR(),director:'',ad:'',dop:'',staff:'',
+  title:'',cast:'',director:'',ad:'',dop:'',staff:'',
   cols:3,rows:2,showShot:false,frames:Array.from({length:6},blank)
 });
 
@@ -461,43 +552,114 @@ const I={
   img:sv('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5-6 6"/>'),
   eraser:sv('<path d="M4 15l6-6 8 8-3 3H7z"/><path d="M10 9l4-4 8 8-4 4"/>',1.8),
   undo:sv('<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>'),
-  clear:sv('<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/>',1.8)
+  clear:sv('<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/>',1.8),
+  pen:sv('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',1.7)
 };
 
 /* ── 상태 ─────────────────────────────── */
+/* 대사 줄 구조: {s:이름, t:대사} 배열. 옛 단일 문자열은 여기서 승계한다. */
+function migrateDlg(dlg,legacy){
+  if(Array.isArray(dlg)&&dlg.length){
+    return dlg.map(r=>typeof r==='string'
+      ? {s:'',t:r}
+      : {s:String((r&&r.s)||''),t:String((r&&r.t)||'')});
+  }
+  const out=[];
+  String(legacy||'').split('\n').forEach(raw=>{
+    const line=raw.replace(/\s+$/,'');
+    if(!line.trim()) return;
+    let m=line.match(/^\s*\(([^)]{1,14})\)\s*(.+)$/);
+    if(m){ out.push({s:m[1].trim(),t:m[2].trim()}); return; }
+    m=line.match(/^\s*([^\s:：]{1,14})\s*[:：]\s*(.+)$/);
+    if(m){ out.push({s:m[1].trim(),t:m[2].trim()}); return; }
+    out.push({s:'',t:line.trim()});
+  });
+  return out.length?out:[{s:'',t:''}];
+}
+
 function normalize(s){
   const b=DEFAULTS();
   const out=Object.assign(b,s||{});
   out.frames=Array.isArray(s&&s.frames)&&s.frames.length?s.frames.map(f=>Object.assign(blank(),f)):b.frames;
   out.cols=Number(out.cols)||3; out.rows=Number(out.rows)||2;
-  delete out.heading; delete out.runtime;
+  delete out.heading; delete out.runtime; delete out.date;
+  if(out.cast===undefined) out.cast='';
   ['director','ad','dop','staff'].forEach(k=>{ if(out[k]===undefined) out[k]=''; });
   out.frames.forEach(f=>{
     if(f.audio!==undefined){ if(!f.title) f.title=f.audio; delete f.audio; }
-    if(f.line===undefined) f.line='';
     if(f.etc===undefined) f.etc='';
+    f.dlg=migrateDlg(f.dlg,f.line);
+    delete f.line;
   });
   return out;
 }
-function loadState(){
+/* ── 다중 프로젝트 저장소 ─────────────── */
+const IDX_KEY='slate-index.v1', PROJ_PREFIX='slate-project.v1.';
+const uid=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function readIndex(){
   try{
-    const raw=localStorage.getItem(KEY);
-    if(!raw)return null;
-    return normalize(JSON.parse(raw));
+    const raw=localStorage.getItem(IDX_KEY); if(!raw) return null;
+    const o=JSON.parse(raw);
+    if(!o||!Array.isArray(o.items)||!o.items.length) return null;
+    return o;
   }catch(e){ return null; }
 }
+function writeIndex(idx){ try{ localStorage.setItem(IDX_KEY,JSON.stringify(idx)); }catch(e){} }
+function loadProjectData(id){
+  try{
+    const raw=localStorage.getItem(PROJ_PREFIX+id);
+    return raw?normalize(JSON.parse(raw)):null;
+  }catch(e){ return null; }
+}
+function saveProjectData(id,data){
+  try{ localStorage.setItem(PROJ_PREFIX+id,JSON.stringify(data)); return true; }
+  catch(e){ return false; }
+}
+function projName(d){ const t=((d&&d.title)||'').trim(); return t||'제목 없는 스토리보드'; }
+function dropProjectData(id){ try{ localStorage.removeItem(PROJ_PREFIX+id); }catch(e){} }
+
 function loadBootstrap(){
   const el=document.getElementById('slate-data');
   if(!el) return null;
   try{ return normalize(JSON.parse(el.textContent)); }catch(e){ return null; }
 }
 const embedded=loadBootstrap();
-let state=embedded||loadState();
-if(!state){ state=normalize({title:'유튜브 5" 티저'}); }
+let index=readIndex();
+let activeId=null;
+
+if(!index){
+  let first=null;
+  try{
+    const legacy=localStorage.getItem(KEY);
+    if(legacy) first=normalize(JSON.parse(legacy));
+  }catch(e){}
+  if(!first) first=embedded||normalize({title:'유튜브 5" 티저'});
+  const id=uid();
+  saveProjectData(id,first);
+  index={activeId:id,items:[{id:id,name:projName(first),updated:Date.now(),cuts:first.frames.length}]};
+  writeIndex(index);
+  try{ localStorage.removeItem(KEY); }catch(e){}
+}else if(embedded){
+  const pid=embedded.pid;
+  const exist=pid&&index.items.find(it=>it.id===pid);
+  if(exist){
+    saveProjectData(pid,embedded);
+    exist.name=projName(embedded); exist.updated=Date.now(); exist.cuts=embedded.frames.length;
+    index.activeId=pid;
+  }else{
+    const id=pid||uid();
+    saveProjectData(id,embedded);
+    index.items.unshift({id:id,name:projName(embedded),updated:Date.now(),cuts:embedded.frames.length});
+    index.activeId=id;
+  }
+  writeIndex(index);
+}
+activeId=index.activeId;
+let state=loadProjectData(activeId)||normalize({});
 
 /* 내보내기용 데이터 객체 */
 function dataObj(){
-  return {app:'slate',version:4,title:state.title,date:state.date,
+  return {app:'slate',version:7,pid:activeId,title:state.title,cast:state.cast,
     director:state.director,ad:state.ad,dop:state.dop,staff:state.staff,
     cols:state.cols,rows:state.rows,showShot:state.showShot,frames:state.frames};
 }
@@ -516,15 +678,18 @@ let pendingCut=null;
 
 /* ── 엘리먼트 ─────────────────────────── */
 const board=$('#board'), stats=$('#stats'), toastEl=$('#toast'), toastMsg=$('#toastMsg');
-const pTitle=$('#pTitle'), pDate=$('#pDate'), pLayout=$('#pLayout');
+const pTitle=$('#pTitle'), pLayout=$('#pLayout');
 const shotToggle=$('#shotToggle'), imgFile=$('#imgFile'), jsonFile=$('#jsonFile');
 
 /* ── 저장 ─────────────────────────────── */
 let saveT=null;
 function scheduleSave(){ clearTimeout(saveT); saveT=setTimeout(saveState,450); }
 function saveState(){
-  try{ localStorage.setItem(KEY,JSON.stringify(state)); }
-  catch(e){ toast('브라우저 저장 공간이 가득 찼어요. ‘저장’으로 JSON을 내려받아 두세요.',5000); }
+  const ok=saveProjectData(activeId,state);
+  const it=index.items.find(x=>x.id===activeId);
+  if(it){ it.name=projName(state); it.updated=Date.now(); it.cuts=state.frames.length; }
+  writeIndex(index);
+  if(!ok) toast('브라우저 저장 공간이 가득 찼어요. ‘HTML로 저장’으로 파일을 내려받아 두세요.',5200);
 }
 let toastT=null;
 function toast(msg,ms){
@@ -537,6 +702,10 @@ function syncCredits(){
   $$('[data-credit]').forEach(n=>{
     if(document.activeElement===n) return;
     n.textContent=state[n.dataset.credit]||'';
+  });
+  $$('[data-cast]').forEach(n=>{
+    if(document.activeElement===n) return;
+    n.textContent=state.cast||'';
   });
 }
 function syncToolUI(){
@@ -563,10 +732,13 @@ function sheetHeadHTML(i,total){
   const credit=(k,label)=>'<div class="credit"><span class="cl">'+label+'</span>'+
     '<div class="cv" contenteditable="true" spellcheck="false" data-credit="'+k+'" data-ph="이름"></div></div>';
   return '<div class="sheet-head">'+pg+
-    '<div class="sheet-date" contenteditable="true" spellcheck="false" data-credit="date" data-ph="작성일자">'+esc(state.date)+'</div>'+
     '<h1 contenteditable="true" spellcheck="false" data-ph="프로젝트 제목을 입력하세요">'+esc(state.title)+'</h1>'+
     '<div class="credits">'+
       credit('director','연출')+credit('ad','조연출')+credit('dop','촬영감독')+credit('staff','스태프')+
+    '</div>'+
+    '<div class="castrow"><span class="cl">출연</span>'+
+      '<div class="cast" contenteditable="true" spellcheck="false" data-cast="1" '+
+        'data-ph="예) 핌 역 : 핌파닛   ·   유튜버 역 : 박예슬">'+esc(state.cast)+'</div>'+
     '</div></div>';
 }
 
@@ -574,6 +746,35 @@ function options(list,val,ph){
   let h='<option value="">'+ph+'</option>';
   list.forEach(v=>{ h+='<option value="'+esc(v)+'"'+(v===val?' selected':'')+'>'+esc(v)+'</option>'; });
   return h;
+}
+
+/* ── 대사 줄 렌더 ─────────────────────── */
+function cutFrame(cutEl){
+  return state.frames.find(x=>x.id===(cutEl&&cutEl.dataset.id));
+}
+function renderDlg(cutEl){
+  const f=cutFrame(cutEl), wrap=cutEl.querySelector('.dlgrows');
+  if(!f||!wrap) return;
+  if(!Array.isArray(f.dlg)||!f.dlg.length) f.dlg=[{s:'',t:''}];
+  wrap.innerHTML=f.dlg.map((r,i)=>
+    '<div class="dlgrow" data-i="'+i+'">'+
+      '<div class="dlgspk" contenteditable="true" spellcheck="false" data-d="s" data-ph="이름"></div>'+
+      '<div class="dlgsay" contenteditable="true" spellcheck="false" data-d="t" data-ph="대사 · 내레이션"></div>'+
+    '</div>').join('');
+  Array.from(wrap.children).forEach((row,i)=>{
+    row.querySelector('.dlgspk').textContent=f.dlg[i].s||'';
+    row.querySelector('.dlgsay').textContent=f.dlg[i].t||'';
+  });
+  syncDlgRow(cutEl);
+}
+function syncDlgRow(cutEl){
+  const f=cutFrame(cutEl), dlg=cutEl.querySelector('.dlg');
+  if(!f||!dlg) return;
+  dlg.querySelectorAll('.dlgrow').forEach(row=>{
+    const rec=f.dlg[Number(row.dataset.i)]||{s:'',t:''};
+    row.dataset.empty=(rec.s||rec.t)?'0':'1';
+  });
+  dlg.dataset.off=f.dlg.some(r=>r.s||r.t)?'0':'1';
 }
 
 function cardEl(f,idx){
@@ -612,7 +813,7 @@ function cardEl(f,idx){
       '<div class="field" contenteditable="true" data-k="screen" data-ph="배우의 행동이나 화면 연출에 관해 여기 자세히 적어보세요." spellcheck="false"></div>'+
     '</div>'+
     '<div class="dlg"><span class="lbl">대사</span>'+
-      '<div class="field" contenteditable="true" data-k="line" data-ph="대사 · 내레이션 · 보이스오버" spellcheck="false"></div>'+
+      '<div class="dlgrows"></div>'+
     '</div>'+
     '<div class="etc"><span class="lbl">기타</span>'+
       '<div class="field" contenteditable="true" data-k="etc" data-ph="준비물 · 소품 · 로케이션 · 인원 등" spellcheck="false"></div>'+
@@ -620,7 +821,7 @@ function cardEl(f,idx){
 
   el.querySelector('[data-k="title"]').textContent=f.title||'';
   el.querySelector('[data-k="screen"]').textContent=f.screen||'';
-  el.querySelector('[data-k="line"]').textContent=f.line||'';
+  renderDlg(el);
   el.querySelector('[data-k="etc"]').textContent=f.etc||'';
   initCanvas(el,f);
 
@@ -767,7 +968,7 @@ board.addEventListener('click',ev=>{
     else if(act==='dup'){ const src=state.frames[i]; const cp=Object.assign({},src,{id:nid()}); state.frames.splice(i+1,0,cp); renderBoard(); scheduleSave(); toast('컷을 복제했어요'); }
     else if(act==='del'){
       const f=state.frames[i];
-      const dirty=(f.title||f.screen||f.line||f.etc||f.canvas||f.sec);
+      const dirty=(f.title||f.screen||f.etc||f.canvas||f.sec||(f.dlg||[]).some(r=>r.s||r.t));
       if(dirty && !confirm('이 컷을 삭제할까요? 적어둔 내용과 그림이 함께 사라집니다.')) return;
       state.frames.splice(i,1);
       if(!state.frames.length) state.frames.push(blank());
@@ -803,6 +1004,47 @@ board.addEventListener('click',ev=>{
   if(h1) h1.focus();
 });
 
+/* 대사 줄: Enter = 다음 줄, Backspace = 빈 줄 삭제 */
+function addDlgRow(cutEl,afterIdx,focus){
+  const f=cutFrame(cutEl);
+  if(!f) return;
+  f.dlg.splice(afterIdx+1,0,{s:'',t:''});
+  renderDlg(cutEl); scheduleSave();
+  const row=cutEl.querySelectorAll('.dlgrow')[afterIdx+1];
+  if(!row) return;
+  const cell=row.querySelector(focus==='s'?'.dlgspk':'.dlgsay');
+  if(cell) cell.focus();
+}
+board.addEventListener('keydown',ev=>{
+  if(ev.isComposing||ev.keyCode===229) return;
+  const cell=ev.target.closest&&ev.target.closest('[data-d]');
+  if(!cell) return;
+  const cutEl=cell.closest('.cut'), row=cell.closest('.dlgrow'), f=cutFrame(cutEl);
+  if(!f||!row) return;
+  const i=Number(row.dataset.i);
+  if(ev.key==='Enter'&&!ev.altKey&&!ev.ctrlKey&&!ev.metaKey){
+    ev.preventDefault();
+    if(cell.dataset.d==='s'){
+      const say=row.querySelector('.dlgsay');
+      if(say&&!say.textContent.trim()) say.focus();
+      else addDlgRow(cutEl,i,'s');
+    }else{
+      addDlgRow(cutEl,i,'s');
+    }
+    return;
+  }
+  if(ev.key==='Backspace'&&cell.dataset.d==='s'){
+    const spk=row.querySelector('.dlgspk'), say=row.querySelector('.dlgsay');
+    if(spk.textContent.trim()||say.textContent.trim()) return;
+    if(f.dlg.length<2) return;
+    ev.preventDefault();
+    f.dlg.splice(i,1);
+    renderDlg(cutEl); scheduleSave();
+    const prev=cutEl.querySelectorAll('.dlgrow')[Math.max(0,i-1)];
+    if(prev) prev.querySelector('.dlgsay').focus();
+  }
+});
+
 board.addEventListener('input',ev=>{
   const h1=ev.target.closest('.sheet-head h1');
   if(h1){
@@ -811,12 +1053,28 @@ board.addEventListener('input',ev=>{
     $$('.sheet-head h1').forEach(n=>{ if(n!==h1) n.textContent=state.title; });
     scheduleSave(); return;
   }
+  const cst=ev.target.closest('[data-cast]');
+  if(cst){
+    state.cast=cst.textContent;
+    $$('[data-cast]').forEach(n=>{ if(n!==cst) n.textContent=state.cast; });
+    scheduleSave(); return;
+  }
   const cr=ev.target.closest('[data-credit]');
   if(cr){
     state[cr.dataset.credit]=cr.textContent;
-    if(cr.dataset.credit==='date') pDate.value=state.date;
     $$('[data-credit="'+cr.dataset.credit+'"]').forEach(n=>{ if(n!==cr) n.textContent=state[cr.dataset.credit]; });
     scheduleSave(); return;
+  }
+  const dcell=ev.target.closest('[data-d]');
+  if(dcell){
+    const art=dcell.closest('.cut'), f=cutFrame(art);
+    if(f){
+      const i=Number(dcell.closest('.dlgrow').dataset.i);
+      if(!f.dlg[i]) f.dlg[i]={s:'',t:''};
+      f.dlg[i][dcell.dataset.d]=dcell.textContent;
+      syncDlgRow(art); scheduleSave();
+    }
+    return;
   }
   const fld=ev.target.closest('.field');
   if(fld){
@@ -857,18 +1115,14 @@ function addCut(afterId){
 }
 $('#btnAdd').addEventListener('click',()=>addCut());
 
-pTitle.value=state.title; pDate.value=state.date;
+pTitle.value=state.title;
 pTitle.addEventListener('input',()=>{
   state.title=pTitle.value; syncCredits();
   $$('.sheet-head h1').forEach(n=>{ if(document.activeElement!==n) n.textContent=state.title; });
   scheduleSave();
 });
 
-pDate.addEventListener('input',()=>{
-  state.date=pDate.value;
-  $$('[data-credit="date"]').forEach(n=>{ if(document.activeElement!==n) n.textContent=state.date; });
-  scheduleSave();
-});
+
 
 pLayout.value=state.cols+'x'+state.rows;
 pLayout.addEventListener('change',()=>{
@@ -932,40 +1186,171 @@ jsonFile.addEventListener('change',()=>{
   rd.onload=()=>{
     try{
       const s=JSON.parse(rd.result);
-      state=normalize(s);
-      pTitle.value=state.title||''; pDate.value=state.date||'';
-      pLayout.value=state.cols+'x'+state.rows;
-      shotToggle.setAttribute('aria-pressed',String(!!state.showShot));
-      renderBoard(); saveState(); toast('프로젝트를 불러왔어요');
+      const loaded=normalize(s);
+      saveState();
+      const nid2=uid();
+      saveProjectData(nid2,loaded);
+      index.items.unshift({id:nid2,name:projName(loaded),updated:Date.now(),cuts:loaded.frames.length});
+      index.activeId=nid2; writeIndex(index);
+      activeId=nid2; state=loaded; applyState();
+      toast('불러왔어요 — 새 스토리보드로 추가했습니다');
     }catch(e){ toast('파일을 읽지 못했어요. SLATE에서 저장한 JSON인지 확인해 주세요.',4000); }
   };
   rd.readAsText(file);
 });
 
+/* ── 프로젝트 관리 ───────────────────── */
+const projModal=$('#projects'), plistEl=$('#plist'), plCount=$('#plCount');
+
+function relTime(ts){
+  if(!ts) return '저장 기록 없음';
+  const d=new Date(ts), n=new Date();
+  const pad=v=>String(v).padStart(2,'0');
+  const y=new Date(n.getTime()-864e5);
+  if(d.toDateString()===n.toDateString()) return '오늘 '+pad(d.getHours())+':'+pad(d.getMinutes());
+  if(d.toDateString()===y.toDateString()) return '어제';
+  return d.getFullYear()+'.'+pad(d.getMonth()+1)+'.'+pad(d.getDate());
+}
+function applyState(){
+  pTitle.value=state.title||'';
+  pLayout.value=state.cols+'x'+state.rows;
+  shotToggle.setAttribute('aria-pressed',String(!!state.showShot));
+  renderBoard();
+}
+function renderProjects(){
+  const items=index.items.slice().sort((a,b)=>(b.updated||0)-(a.updated||0));
+  plCount.textContent=String(items.length);
+  plistEl.innerHTML='';
+  items.forEach(it=>{
+    const on=it.id===activeId;
+    const row=document.createElement('div');
+    row.className='pitem'+(on?' on':'');
+    row.dataset.id=it.id;
+    row.innerHTML=
+      '<div class="pthumb">'+(it.cuts||0)+'<br>CUT</div>'+
+      '<div class="pbody">'+
+        '<div class="pname">'+esc(it.name)+'</div>'+
+        '<div class="pmeta">'+(on?'<span style="color:#3C6B4E;font-weight:700">열림</span><span class="dot"></span>':'')+
+          relTime(it.updated)+'<span class="dot"></span>'+(it.cuts||0)+'컷</div>'+
+      '</div>'+
+      '<div class="pacts">'+
+        '<button data-act="ren" title="이름 변경">'+I.pen+'</button>'+
+        '<button data-act="dup" title="복제">'+I.copy+'</button>'+
+        '<button data-act="del" title="삭제">'+I.trash+'</button>'+
+      '</div>';
+    plistEl.appendChild(row);
+  });
+}
+function openProjects(){ saveState(); renderProjects(); projModal.hidden=false; document.body.style.overflow='hidden'; }
+function closeProjects(){ projModal.hidden=true; document.body.style.overflow=''; }
+
+function switchProject(id){
+  if(id===activeId){ closeProjects(); return; }
+  saveState();
+  const d=loadProjectData(id);
+  if(!d){ toast('이 스토리보드를 열지 못했어요'); return; }
+  activeId=id; index.activeId=id; writeIndex(index);
+  state=d; applyState(); closeProjects();
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast('‘'+projName(state)+'’ 열었어요');
+}
+function newProject(seed){
+  saveState();
+  const d=normalize(Object.assign({title:''},seed||{}));
+  const id=uid();
+  saveProjectData(id,d);
+  index.items.unshift({id:id,name:projName(d),updated:Date.now(),cuts:d.frames.length});
+  index.activeId=id; writeIndex(index);
+  activeId=id; state=d; applyState(); closeProjects();
+  window.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(()=>{ pTitle.focus(); pTitle.select(); },120);
+  toast('새 스토리보드를 열었어요 — 제목을 입력하세요');
+}
+
+$('#btnProjects').addEventListener('click',openProjects);
+$('#btnNewProject').addEventListener('click',()=>newProject());
+$('#plNew').addEventListener('click',()=>newProject());
+
+projModal.addEventListener('click',ev=>{
+  if(ev.target.closest('[data-close]')||ev.target===projModal){ closeProjects(); return; }
+  const btn=ev.target.closest('.pacts button');
+  const row=ev.target.closest('.pitem');
+  if(!row) return;
+  const id=row.dataset.id;
+  const it=index.items.find(x=>x.id===id);
+  if(!it) return;
+  if(btn){
+    const act=btn.dataset.act;
+    if(act==='ren'){
+      const nv=prompt('스토리보드 이름',it.name);
+      if(nv===null) return;
+      const nm=nv.trim(); if(!nm) return;
+      it.name=nm;
+      const d=loadProjectData(id);
+      if(d){ d.title=nm; saveProjectData(id,d); if(id===activeId){ state.title=nm; pTitle.value=nm; } }
+      writeIndex(index); renderProjects();
+      return;
+    }
+    if(act==='dup'){
+      const src=loadProjectData(id);
+      if(!src){ toast('복제할 내용을 읽지 못했어요'); return; }
+      const nid2=uid();
+      const cp=normalize(JSON.parse(JSON.stringify(src)));
+      cp.title=(src.title||'제목 없는 스토리보드')+' (사본)';
+      cp.frames.forEach(f=>f.id=Math.random().toString(36).slice(2,9));
+      saveProjectData(nid2,cp);
+      index.items.unshift({id:nid2,name:projName(cp),updated:Date.now(),cuts:cp.frames.length});
+      writeIndex(index); renderProjects();
+      toast('복제했어요');
+      return;
+    }
+    if(act==='del'){
+      if(index.items.length<=1){ toast('마지막 스토리보드는 삭제할 수 없어요'); return; }
+      if(!confirm('‘'+it.name+'’을(를) 삭제할까요? 되돌릴 수 없습니다.')) return;
+      index.items=index.items.filter(x=>x.id!==id);
+      dropProjectData(id);
+      if(activeId===id){
+        activeId=index.items[0].id;
+        index.activeId=activeId;
+        state=loadProjectData(activeId)||normalize({});
+        applyState();
+      }
+      writeIndex(index); renderProjects();
+      toast('삭제했어요');
+      return;
+    }
+    return;
+  }
+  switchProject(id);
+});
+
 /* 초기화 */
 $('#btnReset').addEventListener('click',()=>{
-  if(!confirm('모든 컷과 그림을 지우고 새 시트로 시작할까요? 되돌릴 수 없습니다.')) return;
-  state=normalize({});
-  pTitle.value=''; pDate.value=state.date;
+  if(!confirm('이 스토리보드의 모든 컷과 그림을 지울까요? 되돌릴 수 없습니다.')) return;
+  const keepName=state.title;
+  state=normalize({title:keepName});
+  pTitle.value=state.title;
   pLayout.value='3x2'; shotToggle.setAttribute('aria-pressed','false');
-  renderBoard(); saveState(); toast('새 시트를 열었어요');
+  renderBoard(); saveState(); toast('이 프로젝트를 비웠어요');
 });
 
 /* 예시 */
 const SAMPLE=[
   {t:'오프닝 · 새벽 주방',s:'와이드. 어두운 주방, 창문으로 새벽빛이 스며든다. 커튼이 천천히 흔들린다.',l:'',e:'내부 로케이션 1곳 · 아침 5시 세팅',z:'와이드',m:'고정',d:'5'},
-  {t:'드립 커피',s:'클로즈업. 드리퍼에 물이 한 방울씩 떨어지는 순간, 김 서린 유리.',l:'',e:'드리퍼 · 원두 · 스팀(후반)',z:'클로즈업',m:'달리',d:'3'},
-  {t:'첫 5초',s:'미디엄. 창가에 앉은 인물의 손이 컵을 감싼다. 역광 실루엣.',l:'(내레이션) 하루는, 첫 5초에서 시작됩니다.',e:'배우 1명 · 의상 2벌',z:'미디엄',m:'고정',d:'4'},
-  {t:'컵을 드는 손',s:'익스트림 클로즈업. 컵을 들어 올리는 손, 초점은 김이 피어오르는 표면.',l:'',e:'헤어·메이크업 대기 필요',z:'익스트림 클로즈업',m:'틸트',d:'2'},
-  {t:'창밖을 보는 인물',s:'와이드. 인물이 창밖을 바라본다. 카메라 슬로우 달리 인.',l:'(내레이션) 당신의 아침을 위해.',e:'리플렉터 · 확산 시트',z:'와이드',m:'달리',d:'5'},
-  {t:'로고 · 타이틀 카드',s:'풀샷 → 타이틀 카드. 화면 중앙에 로고와 슬로건이 페이드 인.',l:'(로고 멘트) SLATE — 당신의 아침.',e:'로고 원본 파일(후반 전달)',z:'풀샷',m:'고정',d:'3'}
+  {t:'드립 커피',s:'클로즈업. 드리퍼에 물이 한 방울씩 떨어지는 순간, 김 서린 유리.',l:[{s:'핌',t:'또 이 시간에 일어났네.'}],e:'드리퍼 · 원두 · 스팀(후반)',z:'클로즈업',m:'달리',d:'3'},
+  {t:'첫 5초',s:'미디엄. 창가에 앉은 인물의 손이 컵을 감싼다. 역광 실루엣.',l:[{s:'내레이션',t:'하루는, 첫 5초에서 시작됩니다.'}],e:'배우 1명 · 의상 2벌',z:'미디엄',m:'고정',d:'4'},
+  {t:'컵을 드는 손',s:'익스트림 클로즈업. 컵을 들어 올리는 손, 초점은 김이 피어오르는 표면.',l:[{s:'유튜버',t:'자, 오늘도 한 잔.'},{s:'핌',t:'…뭐야, 벌써 찍고 있었어?'}],e:'헤어·메이크업 대기 필요',z:'익스트림 클로즈업',m:'틸트',d:'2'},
+  {t:'창밖을 보는 인물',s:'와이드. 인물이 창밖을 바라본다. 카메라 슬로우 달리 인.',l:[{s:'',t:'당신의 아침을 위해.'}],e:'리플렉터 · 확산 시트',z:'와이드',m:'달리',d:'5'},
+  {t:'로고 · 타이틀 카드',s:'풀샷 → 타이틀 카드. 화면 중앙에 로고와 슬로건이 페이드 인.',l:[{s:'로고',t:'SLATE — 당신의 아침.'}],e:'로고 원본 파일(후반 전달)',z:'풀샷',m:'고정',d:'3'}
 ];
 $('#btnSample').addEventListener('click',()=>{
   while(state.frames.length<6) state.frames.push(blank());
   SAMPLE.forEach((s,i)=>{
     const f=state.frames[i];
-    f.title=s.t; f.screen=s.s; f.line=s.l; f.etc=s.e; f.size=s.z; f.move=s.m; f.sec=s.d;
+    f.title=s.t; f.screen=s.s; f.etc=s.e; f.size=s.z; f.move=s.m; f.sec=s.d;
+    f.dlg=(Array.isArray(s.l)&&s.l.length?s.l:[{s:'',t:''}]).map(r=>({s:r.s||'',t:r.t||''}));
   });
+  if(!state.cast) state.cast='핌 역 : 핌파닛\n유튜버 역 : 박예슬';
   renderBoard(); scheduleSave(); toast('예시 6컷을 채웠어요 — 내용을 고쳐 쓰세요');
 });
 
@@ -973,13 +1358,17 @@ $('#btnSample').addEventListener('click',()=>{
 document.addEventListener('keydown',ev=>{
   if(ev.altKey && (ev.key==='n'||ev.key==='N')){ ev.preventDefault(); addCut(); }
   if((ev.ctrlKey||ev.metaKey) && (ev.key==='s'||ev.key==='S')){ ev.preventDefault(); $('#btnSave').click(); }
+  if((ev.ctrlKey||ev.metaKey) && !ev.altKey && (ev.key==='o'||ev.key==='O')){ ev.preventDefault(); openProjects(); }
+  if(ev.ctrlKey&&ev.altKey&&(ev.key==='n'||ev.key==='N')){ ev.preventDefault(); newProject(); }
+  if(ev.key==='Escape' && !projModal.hidden){ closeProjects(); }
   if(ev.key==='Escape'){ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
 });
 
 /* 시작 */
-renderBoard();
+applyState();
 })();
 
 </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
