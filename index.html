@@ -323,6 +323,36 @@ select.txt{padding-right:24px;appearance:none;
 .pbtn:hover{background:#F2F8F3;border-color:#CFE3D4}
 .pbtn.dark{background:#12171A;color:#fff;border-color:#12171A}
 .pbtn.dark:hover{background:#243430;border-color:#243430}
+.pbtn:disabled{opacity:.5;cursor:default}
+
+/* ── 깃허브 동기화 ─────────────────────── */
+.ghdot{width:7px;height:7px;border-radius:50%;background:#7C8C84;flex:0 0 auto;display:block;
+  box-shadow:0 0 0 2px rgba(255,255,255,.10)}
+.ghdot.on{background:#5FC97E;box-shadow:0 0 0 2px rgba(95,201,126,.22)}
+.ghdot.wait{background:#E4B053;box-shadow:0 0 0 2px rgba(228,176,83,.22)}
+.ghdot.err{background:#E1503C;box-shadow:0 0 0 2px rgba(225,80,60,.22)}
+.btn .ghdot{margin-right:1px}
+.ghform{padding:14px 18px 6px;display:grid;gap:12px}
+.ghfield{display:grid;gap:5px;min-width:0}
+.ghfield>label{font:800 9.5px/1 var(--sans);letter-spacing:.08em;color:#5E6E66}
+.ghfield input{border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:12.5px;
+  color:#16211C;outline:none;transition:.15s;width:100%;background:#fff}
+.ghfield input:focus{border-color:#BFD6C5;box-shadow:0 0 0 3px #E7F1E9}
+.ghfield .sub{font-size:10px;color:#93A099;line-height:1.45}
+.ghrow{display:flex;gap:8px}
+.ghrow .ghfield:first-child{flex:1 1 auto}
+.ghrow .ghfield:last-child{flex:0 0 108px}
+.ghcheck{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#2B3A33;
+  background:#F7FBF7;border:1px solid #E7EFE8;border-radius:9px;padding:10px 12px}
+.ghcheck input{width:15px;height:15px;accent-color:#2F6B45;margin:0}
+.ghnote{font-size:10.5px;color:#6C7873;line-height:1.6;background:#FBF7F1;border:1px solid #EFE4D2;
+  border-radius:9px;padding:10px 12px}
+.ghnote b{color:#8A5A22}
+.ghstat{display:flex;align-items:center;gap:7px;padding:10px 18px 12px;font-size:11px;color:#67756E;border-top:1px solid #F1F5F2}
+.ghstat .ghdot{background:#C3CEC7}
+.ghstat .ghdot.on{background:#3FA45E}
+.ghstat .ghdot.wait{background:#D89A2B}
+.ghstat .ghdot.err{background:#C2412C}
 
 @media print{
   @page{size:A4 landscape;margin:6mm}
@@ -418,17 +448,16 @@ select.txt{padding-right:24px;appearance:none;
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       <span class="label">컷 추가</span>
     </button>
-    <button class="btn ghost" id="btnLoad" title="JSON 불러오기">
+    <button class="btn ghost" id="btnGh" title="GitHub 자동 동기화 — 컴퓨터를 바꿔도 이어서 작업">
+      <span class="ghdot" id="ghDot"></span><span class="label">깃허브</span>
+    </button>
+    <button class="btn ghost" id="btnLoad" title="백업 파일(.html/.json) 불러오기 — 끌어다 놓아도 됩니다">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
       <span class="label">불러오기</span>
     </button>
-    <button class="btn ghost" id="btnExport" title="내용이 담긴 HTML로 저장 (다른 컴에서도 그대로 열림)">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M12 12v6"/></svg>
-      <span class="label">HTML로 저장</span>
-    </button>
-    <button class="btn ghost" id="btnSave" title="JSON 저장">
+    <button class="btn ghost" id="btnExport" title="모든 스토리보드가 담긴 백업 파일 (다른 컴퓨터에서 열면 그대로 복원)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
-      <span class="label">저장</span>
+      <span class="label">백업 저장</span>
     </button>
     <button class="btn solid" id="btnPrint" title="인쇄 / PDF (Ctrl+P)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
@@ -490,8 +519,8 @@ select.txt{padding-right:24px;appearance:none;
 <div class="foot">
   <p>
     프레임 위에 마우스를 올리면 도구가 뜹니다 — <b>이미지</b>로 사진 넣기, 그 위에 바로 <b>스케치</b>.
-    화면은 <kbd>Ctrl</kbd>+<kbd>P</kbd>로 PDF 저장. 작업 내용은 <b>이 컴퓨터의 이 브라우저</b>에만 저장되니,
-    다른 컴으로 옮기려면 <b>HTML로 저장</b>을 눌러 나온 파일을 그대로 가지고 가세요.
+    화면은 <kbd>Ctrl</kbd>+<kbd>P</kbd>로 PDF 저장. 작업은 <b>이 브라우저에 자동 저장</b>되고,
+    <b>깃허브</b>를 연결해두면 어느 컴퓨터에서 열어도 최신 상태로 이어집니다.
   </p>
   <div class="flinks">
     <button class="link" id="btnSample">예시 내용 채우기</button>
@@ -509,8 +538,57 @@ select.txt{padding-right:24px;appearance:none;
     </div>
     <div class="plist" id="plist"></div>
     <div class="panel-foot">
-      <span class="hint">같은 브라우저에만 저장됩니다. 옮기려면 <b>HTML로 저장</b>.</span>
+      <span class="hint">이 브라우저에 자동 저장됩니다 · 다른 컴퓨터로 옮길 땐 <b>백업 저장</b> 파일을 그 컴에서 열기만 하면 됩니다.</span><button class="pbtn" id="btnSave" title="가벼운 JSON 백업 파일">JSON 백업</button>
       <button class="pbtn dark" id="plNew">＋ 새 스토리보드</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="ghModal" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="ghTitle" style="max-width:548px">
+    <div class="panel-head">
+      <h2 id="ghTitle">GitHub 동기화</h2>
+      <button class="px" data-close="1" title="닫기" aria-label="닫기">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="ghform">
+      <div class="ghrow">
+        <div class="ghfield">
+          <label for="ghRepo">저장소</label>
+          <input id="ghRepo" spellcheck="false" placeholder="jenzang2/slate">
+        </div>
+        <div class="ghfield">
+          <label for="ghBranch">브랜치</label>
+          <input id="ghBranch" spellcheck="false" placeholder="main">
+        </div>
+      </div>
+      <div class="ghfield">
+        <label for="ghPath">데이터 파일 경로</label>
+        <input id="ghPath" spellcheck="false" placeholder="slate-data.json">
+        <span class="sub">이 경로에 작업 내용이 커밋됩니다. 비워두면 <b>slate-data.json</b>.</span>
+      </div>
+      <div class="ghfield">
+        <label for="ghToken">액세스 토큰 (fine-grained PAT)</label>
+        <input id="ghToken" type="password" spellcheck="false" autocomplete="off" placeholder="github_pat_...">
+        <span class="sub">이 브라우저에만 저장되고 어디로도 전송되지 않습니다. 저장소 하나에 Contents: Read and write 권한만 주세요.</span>
+      </div>
+      <label class="ghcheck" for="ghAuto">
+        <input type="checkbox" id="ghAuto">
+        <span>자동 동기화 — 수정하면 몇 초 뒤 자동으로 커밋</span>
+      </label>
+      <div class="ghnote">
+        <b>공개 저장소라면</b> 스토리보드 내용도 공개됩니다. 민감한 작업은 <b>비공개 저장소</b>를 하나 더 만들어
+        저장소 칸에 그 주소를 넣고, 화면(index.html)은 지금 저장소에 그대로 두세요.
+      </div>
+    </div>
+    <div class="ghstat"><span class="ghdot" id="ghStatDot"></span><span id="ghStatus">아직 연결하지 않았어요</span></div>
+    <div class="panel-foot">
+      <button class="pbtn" id="ghTest">연결 확인</button>
+      <button class="pbtn" id="ghPull">내려받기</button>
+      <button class="pbtn" id="ghPushOne">올리기</button>
+      <span class="hint"></span>
+      <button class="pbtn dark" id="ghSave">저장</button>
     </div>
   </div>
 </div>
@@ -518,7 +596,7 @@ select.txt{padding-right:24px;appearance:none;
 <div class="toast" id="toast"><i></i><span id="toastMsg"></span></div>
 
 <input type="file" id="imgFile" accept="image/*" hidden>
-<input type="file" id="jsonFile" accept="application/json,.json" hidden>
+<input type="file" id="jsonFile" accept=".json,.slate,.html,.htm,application/json,text/html" hidden>
 <script>
 (function(){
 'use strict';
@@ -528,6 +606,7 @@ const KEY='storyboard-slate.v1';
 const CW=800, CH=450;
 const nid=()=>Math.random().toString(36).slice(2,9);
 const $=(s,r=document)=>r.querySelector(s);
+const on=(sel,ev,fn)=>{const el=$(sel); if(el) el.addEventListener(ev,fn);};
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -624,36 +703,62 @@ function loadBootstrap(){
   try{ return normalize(JSON.parse(el.textContent)); }catch(e){ return null; }
 }
 const embedded=loadBootstrap();
-let index=readIndex();
-let activeId=null;
+let index=readIndex()||{activeId:null,items:[]};
+let activeId=null, bootMsg='';
 
-if(!index){
+/* 백업 파일 안의 프로젝트들을 이 브라우저로 흡수 — 더 최신 것만 덮어쓴다 */
+function absorbBundle(b){
+  const rep={added:0,updated:0,kept:0};
+  if(!b||!Array.isArray(b.projects)||!b.projects.length) return rep;
+  b.projects.forEach(p=>{
+    if(!p||!p.data||!Array.isArray(p.data.frames)) return;
+    const id=p.id||uid();
+    const stamp=Number(p.updated)||Date.now();
+    const meta=index.items.find(x=>x.id===id);
+    if(meta&&(Number(meta.updated)||0)>stamp){ rep.kept++; return; }
+    const data=normalize(Object.assign({},p.data,{pid:id}));
+    saveProjectData(id,data);
+    if(meta){ meta.name=projName(data)||meta.name; meta.updated=stamp; meta.cuts=data.frames.length; rep.updated++; }
+    else{ index.items.unshift({id:id,name:p.name||projName(data),updated:stamp,cuts:data.frames.length}); rep.added++; }
+  });
+  if(b.activeId&&index.items.some(x=>x.id===b.activeId)) index.activeId=b.activeId;
+  writeIndex(index);
+  return rep;
+}
+
+/* 1) 이 파일에 담긴 백업 전부 */
+if(embedded&&Array.isArray(embedded.projects)){
+  const r=absorbBundle(embedded);
+  if(r.added||r.updated) bootMsg='이 파일에 담긴 스토리보드 '+(r.added+r.updated)+'개를 이 브라우저로 가져왔어요';
+}
+/* 2) 예전 방식(프로젝트 1개만 박힌 HTML) */
+if(embedded&&!Array.isArray(embedded.projects)&&Array.isArray(embedded.frames)){
+  const data=normalize(embedded), pid=embedded.pid;
+  const meta=pid?index.items.find(x=>x.id===pid):null;
+  if(meta){ saveProjectData(pid,data); meta.name=projName(data); meta.updated=Date.now(); meta.cuts=data.frames.length; index.activeId=pid; }
+  else{
+    const id=pid||uid();
+    saveProjectData(id,data);
+    index.items.unshift({id:id,name:projName(data),updated:Date.now(),cuts:data.frames.length});
+    index.activeId=id;
+  }
+  writeIndex(index);
+}
+/* 3) 아무것도 없으면 새로 시작 */
+if(!index.items.length){
   let first=null;
   try{
     const legacy=localStorage.getItem(KEY);
     if(legacy) first=normalize(JSON.parse(legacy));
   }catch(e){}
-  if(!first) first=embedded||normalize({title:'유튜브 5" 티저'});
+  if(!first) first=normalize({title:'유튜브 5" 티저'});
   const id=uid();
   saveProjectData(id,first);
   index={activeId:id,items:[{id:id,name:projName(first),updated:Date.now(),cuts:first.frames.length}]};
-  writeIndex(index);
   try{ localStorage.removeItem(KEY); }catch(e){}
-}else if(embedded){
-  const pid=embedded.pid;
-  const exist=pid&&index.items.find(it=>it.id===pid);
-  if(exist){
-    saveProjectData(pid,embedded);
-    exist.name=projName(embedded); exist.updated=Date.now(); exist.cuts=embedded.frames.length;
-    index.activeId=pid;
-  }else{
-    const id=pid||uid();
-    saveProjectData(id,embedded);
-    index.items.unshift({id:id,name:projName(embedded),updated:Date.now(),cuts:embedded.frames.length});
-    index.activeId=id;
-  }
   writeIndex(index);
 }
+if(!index.activeId||!index.items.some(x=>x.id===index.activeId)) index.activeId=index.items[0].id;
 activeId=index.activeId;
 let state=loadProjectData(activeId)||normalize({});
 
@@ -664,14 +769,29 @@ function dataObj(){
     cols:state.cols,rows:state.rows,showShot:state.showShot,frames:state.frames};
 }
 /* 현재 화면 + 내용을 하나의 HTML 파일로 굽기 */
-function buildExportHTML(){
-  const json=JSON.stringify(dataObj()).replace(/<\//g,'<\\/');
-  let html=document.documentElement.outerHTML;
-  html=html.replace(/<script type="application\/json" id="slate-data">[\s\S]*?<\/script>/,'');
-  html=html.replace(/<head(\s[^>]*)?>/i, function(m){
-    return m + '<script type="application/json" id="slate-data">' + json + '</' + 'script>';
+const VER=8;
+/* 모든 스토리보드를 한 파일에 담는다 */
+function bundleObj(){
+  const projects=[];
+  index.items.forEach(it=>{
+    const data=(it.id===activeId)?state:loadProjectData(it.id);
+    if(!data) return;
+    projects.push({id:it.id,name:it.name||projName(data),updated:it.updated||Date.now(),data:data});
   });
-  return '<!doctype html>' + html;
+  return {app:'slate',version:VER,kind:'backup',activeId:activeId,projects:projects};
+}
+function buildExportHTML(){
+  /* 주의: 정규식으로 본문을 훑으면 코드 안의 같은 문자열을 먼저 지워버린다.
+     반드시 DOM 복제본에 스크립트를 넣는 방식으로 만든다. */
+  const json=JSON.stringify(bundleObj()).replace(/</g,'\\u003c');
+  const root=document.documentElement.cloneNode(true);
+  const old=root.querySelector('script#slate-data');
+  if(old&&old.parentNode) old.parentNode.removeChild(old);
+  const headEl=root.querySelector('head');
+  const sc=document.createElement('script');
+  sc.type='application/json'; sc.id='slate-data'; sc.textContent=json;
+  headEl.insertBefore(sc,headEl.firstChild);
+  return '<!doctype html>\n'+root.outerHTML;
 }
 
 let pendingCut=null;
@@ -689,7 +809,8 @@ function saveState(){
   const it=index.items.find(x=>x.id===activeId);
   if(it){ it.name=projName(state); it.updated=Date.now(); it.cuts=state.frames.length; }
   writeIndex(index);
-  if(!ok) toast('브라우저 저장 공간이 가득 찼어요. ‘HTML로 저장’으로 파일을 내려받아 두세요.',5200);
+  if(!ok) toast('브라우저 저장 공간이 가득 찼어요. ‘백업 저장’으로 파일을 내려받아 두세요.',5200);
+  ghTouch();
 }
 let toastT=null;
 function toast(msg,ms){
@@ -1113,7 +1234,7 @@ function addCut(afterId){
   if(last) last.scrollIntoView({behavior:'smooth',block:'center'});
   return nb;
 }
-$('#btnAdd').addEventListener('click',()=>addCut());
+on('#btnAdd','click',()=>addCut());
 
 pTitle.value=state.title;
 pTitle.addEventListener('input',()=>{
@@ -1139,17 +1260,17 @@ shotToggle.addEventListener('click',()=>{
   scheduleSave();
 });
 
-$('#swatches').addEventListener('click',ev=>{
+on('#swatches','click',ev=>{
   const b=ev.target.closest('.sw'); if(!b) return;
   tool.color=b.dataset.color; tool.eraser=false; syncToolUI();
 });
-$('#sizebar').addEventListener('click',ev=>{
+on('#sizebar','click',ev=>{
   const b=ev.target.closest('button'); if(!b) return;
   tool.size=Number(b.dataset.size)||5; syncToolUI();
 });
 
 /* 인쇄 */
-$('#btnPrint').addEventListener('click',()=>{
+on('#btnPrint','click',()=>{
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   setTimeout(()=>window.print(),60);
 });
@@ -1165,38 +1286,79 @@ function download(blob,name){
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
 
-$('#btnExport').addEventListener('click',()=>{
+on('#btnExport','click',()=>{
   saveState();
-  const html=buildExportHTML();
-  download(new Blob([html],{type:'text/html'}),'storyboard-'+stamp()+'.html');
-  toast('내용이 담긴 HTML 파일을 저장했어요 — 이 파일 하나만 옮기면 됩니다',4200);
+  const b=bundleObj();
+  download(new Blob([buildExportHTML()],{type:'text/html'}),'SLATE-백업-'+stamp()+'.html');
+  toast('스토리보드 '+b.projects.length+'개를 담았어요 — 이 파일을 열면 어느 컴퓨터에서든 그대로 나옵니다',5200);
+});
+on('#btnSave','click',()=>{
+  saveState();
+  const b=bundleObj();
+  download(new Blob([JSON.stringify(b)],{type:'application/json'}),'SLATE-백업-'+stamp()+'.json');
+  toast('가벼운 백업 파일(.json)로 저장했어요 — 불러오기로 복원됩니다');
 });
 
-$('#btnSave').addEventListener('click',()=>{
-  const data=dataObj();
-  const d=new Date(), pad=n=>String(n).padStart(2,'0');
-  const name='storyboard-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())+'.json';
-  download(new Blob([JSON.stringify(data)],{type:'application/json'}),name);
-  toast('프로젝트 파일을 저장했어요');
-});
-$('#btnLoad').addEventListener('click',()=>{ jsonFile.value=''; jsonFile.click(); });
-jsonFile.addEventListener('change',()=>{
-  const file=jsonFile.files && jsonFile.files[0]; if(!file) return;
+/* 파일 하나를 읽어 들인다 (html 백업 / json 백업 / 예전 단일 프로젝트) */
+function parseImport(text){
+  const t=String(text||'').trim();
+  if(!t) throw new Error('empty');
+  if(t.charAt(0)==='{') return JSON.parse(t);
+  const m=t.match(/<script type="application\/json" id="slate-data">([\s\S]*?)<\/script>/);
+  if(m) return JSON.parse(m[1]);
+  throw new Error('unknown');
+}
+function importText(text){
+  let o=null;
+  try{ o=parseImport(text); }catch(e){ toast('SLATE에서 저장한 파일이 아니에요',4200); return; }
+  saveState();
+  if(o&&Array.isArray(o.projects)){
+    const r=absorbBundle(o);
+    if(!r.added&&!r.updated){ toast('이미 있는 스토리보드예요 — 이 브라우저의 최신 내용을 그대로 뒀습니다',4800); return; }
+    activeId=index.activeId; state=loadProjectData(activeId)||state; applyState();
+    toast('스토리보드 '+(r.added+r.updated)+'개를 가져왔어요'+(r.added?' (새로 '+r.added+'개)':''),4800);
+    if(!projModal.hidden) renderProjects();
+    return;
+  }
+  if(o&&Array.isArray(o.frames)){
+    const loaded=normalize(o), id=uid();
+    saveProjectData(id,loaded);
+    index.items.unshift({id:id,name:projName(loaded),updated:Date.now(),cuts:loaded.frames.length});
+    index.activeId=id; writeIndex(index);
+    activeId=id; state=loaded; applyState();
+    toast('스토리보드 1개를 새로 불러왔어요');
+    return;
+  }
+  toast('안에 담긴 스토리보드를 찾지 못했어요',4200);
+}
+function readFileIn(file){
+  if(!file) return;
   const rd=new FileReader();
-  rd.onload=()=>{
-    try{
-      const s=JSON.parse(rd.result);
-      const loaded=normalize(s);
-      saveState();
-      const nid2=uid();
-      saveProjectData(nid2,loaded);
-      index.items.unshift({id:nid2,name:projName(loaded),updated:Date.now(),cuts:loaded.frames.length});
-      index.activeId=nid2; writeIndex(index);
-      activeId=nid2; state=loaded; applyState();
-      toast('불러왔어요 — 새 스토리보드로 추가했습니다');
-    }catch(e){ toast('파일을 읽지 못했어요. SLATE에서 저장한 JSON인지 확인해 주세요.',4000); }
-  };
+  rd.onload=()=>importText(rd.result);
+  rd.onerror=()=>toast('파일을 읽지 못했어요');
   rd.readAsText(file);
+}
+on('#btnLoad','click',()=>{ jsonFile.value=''; jsonFile.click(); });
+jsonFile.addEventListener('change',()=>{
+  const file=jsonFile.files && jsonFile.files[0];
+  if(file) readFileIn(file);
+  jsonFile.value='';
+});
+
+/* 파일을 화면에 끌어다 놓아도 복원 */
+['dragover','drop'].forEach(function(t){
+  document.addEventListener(t,function(ev){
+    if(ev.target.closest&&ev.target.closest('.frame')) return;
+    const dt=ev.dataTransfer;
+    if(!dt) return;
+    if(t==='dragover'){
+      if(Array.from(dt.types||[]).indexOf('Files')>=0) ev.preventDefault();
+      return;
+    }
+    const f=dt.files&&dt.files[0];
+    if(!f) return;
+    if(/\.(html?|json|slate)$/i.test(f.name)){ ev.preventDefault(); readFileIn(f); }
+  });
 });
 
 /* ── 프로젝트 관리 ───────────────────── */
@@ -1267,9 +1429,9 @@ function newProject(seed){
   toast('새 스토리보드를 열었어요 — 제목을 입력하세요');
 }
 
-$('#btnProjects').addEventListener('click',openProjects);
-$('#btnNewProject').addEventListener('click',()=>newProject());
-$('#plNew').addEventListener('click',()=>newProject());
+on('#btnProjects','click',openProjects);
+on('#btnNewProject','click',()=>newProject());
+on('#plNew','click',()=>newProject());
 
 projModal.addEventListener('click',ev=>{
   if(ev.target.closest('[data-close]')||ev.target===projModal){ closeProjects(); return; }
@@ -1325,7 +1487,7 @@ projModal.addEventListener('click',ev=>{
 });
 
 /* 초기화 */
-$('#btnReset').addEventListener('click',()=>{
+on('#btnReset','click',()=>{
   if(!confirm('이 스토리보드의 모든 컷과 그림을 지울까요? 되돌릴 수 없습니다.')) return;
   const keepName=state.title;
   state=normalize({title:keepName});
@@ -1343,7 +1505,7 @@ const SAMPLE=[
   {t:'창밖을 보는 인물',s:'와이드. 인물이 창밖을 바라본다. 카메라 슬로우 달리 인.',l:[{s:'',t:'당신의 아침을 위해.'}],e:'리플렉터 · 확산 시트',z:'와이드',m:'달리',d:'5'},
   {t:'로고 · 타이틀 카드',s:'풀샷 → 타이틀 카드. 화면 중앙에 로고와 슬로건이 페이드 인.',l:[{s:'로고',t:'SLATE — 당신의 아침.'}],e:'로고 원본 파일(후반 전달)',z:'풀샷',m:'고정',d:'3'}
 ];
-$('#btnSample').addEventListener('click',()=>{
+on('#btnSample','click',()=>{
   while(state.frames.length<6) state.frames.push(blank());
   SAMPLE.forEach((s,i)=>{
     const f=state.frames[i];
@@ -1357,15 +1519,256 @@ $('#btnSample').addEventListener('click',()=>{
 /* 단축키 */
 document.addEventListener('keydown',ev=>{
   if(ev.altKey && (ev.key==='n'||ev.key==='N')){ ev.preventDefault(); addCut(); }
-  if((ev.ctrlKey||ev.metaKey) && (ev.key==='s'||ev.key==='S')){ ev.preventDefault(); $('#btnSave').click(); }
+  if((ev.ctrlKey||ev.metaKey) && (ev.key==='s'||ev.key==='S')){ ev.preventDefault(); $('#btnExport').click(); }
   if((ev.ctrlKey||ev.metaKey) && !ev.altKey && (ev.key==='o'||ev.key==='O')){ ev.preventDefault(); openProjects(); }
   if(ev.ctrlKey&&ev.altKey&&(ev.key==='n'||ev.key==='N')){ ev.preventDefault(); newProject(); }
   if(ev.key==='Escape' && !projModal.hidden){ closeProjects(); }
   if(ev.key==='Escape'){ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
 });
 
+/* ── GitHub 동기화 ─────────────────────── */
+const GH_KEY='slate-gh.v1';
+function ghLoad(){
+  let c={};
+  try{ c=JSON.parse(localStorage.getItem(GH_KEY)||'{}'); }catch(e){ c={}; }
+  return {
+    repo:String(c.repo||'jenzang2/slate'),
+    branch:String(c.branch||'main'),
+    path:String(c.path||'slate-data.json'),
+    token:String(c.token||''),
+    auto:c.auto!==false,
+    lastSync:Number(c.lastSync)||0
+  };
+}
+function ghStore(c){ try{ localStorage.setItem(GH_KEY,JSON.stringify(c)); }catch(e){} }
+let ghCfg=ghLoad();
+let ghPulled=false, ghBusy=false, ghTimer=null, ghDirty=false;
+
+const ghEl={
+  modal:null, dot:null, statDot:null, status:null,
+  repo:null, branch:null, path:null, token:null, auto:null
+};
+function ghFill(){
+  ghEl.repo.value=ghCfg.repo;
+  ghEl.branch.value=ghCfg.branch;
+  ghEl.path.value=ghCfg.path;
+  ghEl.token.value=ghCfg.token;
+  ghEl.auto.checked=!!ghCfg.auto;
+}
+function ghSetDot(state,text){
+  const cls=state==='on'?'on':state==='wait'?'wait':state==='err'?'err':'';
+  [ghEl.dot,ghEl.statDot].forEach(d=>{ if(!d) return; d.className='ghdot'+(cls?' '+cls:''); });
+  if(ghEl.status&&text) ghEl.status.textContent=text;
+  ghEl.dot.title='GitHub: '+(text||'');
+}
+function ghReady(){ return !!(ghCfg.token&&ghCfg.repo&&ghCfg.path); }
+function ghRepoUrl(suffix){
+  const r=ghCfg.repo.replace(/^https?:\/\/github\.com\//i,'').replace(/\s/g,'').replace(/\/+$/,'');
+  return 'https://api.github.com/repos/'+r+(suffix||'');
+}
+async function ghApi(method,url,body,accept){
+  const h={
+    'Authorization':'Bearer '+ghCfg.token,
+    'X-GitHub-Api-Version':'2022-11-28',
+    'Accept':accept||'application/vnd.github+json'
+  };
+  if(body) h['Content-Type']='application/json';
+  const ctl=window.AbortController?new AbortController():null;
+  const timer=ctl?setTimeout(()=>ctl.abort(),25000):null;
+  let res;
+  try{
+    res=await fetch(url,{method:method,headers:h,body:body?JSON.stringify(body):undefined,
+      signal:ctl?ctl.signal:undefined,cache:'no-store'});
+  }catch(e){
+    if(timer) clearTimeout(timer);
+    return {ok:false,status:0,msg:'네트워크에 연결하지 못했어요'};
+  }
+  if(timer) clearTimeout(timer);
+  let data=null, text='';
+  try{
+    if((accept||'').indexOf('raw')>=0) text=await res.text();
+    else{ text=await res.text(); try{ data=JSON.parse(text); }catch(e2){} }
+  }catch(e3){}
+  if(res.ok) return {ok:true,status:res.status,data:data,text:text};
+  let msg='';
+  if(res.status===401) msg='토큰이 올바르지 않거나 만료됐어요';
+  else if(res.status===403) msg='권한이 없어요 — 토큰에 Contents: Read and write 를 켜주세요';
+  else if(res.status===404) msg='저장소나 파일을 찾지 못했어요 (저장소 이름·권한 확인)';
+  else if(res.status===409||res.status===422) msg='원격이 방금 바뀌었어요 — 다시 시도해 주세요';
+  else msg='GitHub 오류 '+res.status;
+  return {ok:false,status:res.status,msg:msg,data:data,text:text};
+}
+
+/* 연결 확인 */
+async function ghTest(quiet){
+  if(!ghCfg.token){ ghSetDot('err','토큰을 넣어주세요'); return false; }
+  ghSetDot('wait','연결 확인 중…');
+  const r=await ghApi('GET',ghRepoUrl(''));
+  if(!r.ok){ ghSetDot('err',r.msg); if(!quiet) toast(r.msg,4600); return false; }
+  if(!ghCfg.branch) ghCfg.branch=r.data.default_branch||'main';
+  const canPush=r.data.permissions&&r.data.permissions.push;
+  if(canPush===false){
+    ghSetDot('err','이 토큰으로는 쓸 수 없어요 (읽기 전용)');
+    if(!quiet) toast('읽기 전용 토큰이에요. Contents: Read and write 권한이 필요합니다.',5200);
+    return false;
+  }
+  ghPulled=ghPulled||false;
+  ghSetDot('on','연결됨 · '+r.data.full_name+' ('+ghCfg.branch+')');
+  if(!quiet) toast('연결됐어요 — '+r.data.full_name,3600);
+  return true;
+}
+
+/* 내려받기(병합) */
+async function ghPull(quiet){
+  if(!ghReady()) return false;
+  ghSetDot('wait','내려받는 중…');
+  const url=ghRepoUrl('/contents/'+encodeURI(ghCfg.path)+'?ref='+encodeURIComponent(ghCfg.branch)+'&t='+Date.now());
+  const r=await ghApi('GET',url,null,'application/vnd.github.raw');
+  if(!r.ok&&r.status===404){
+    ghPulled=true; ghSetDot('on','원격이 비어 있어요 — 첫 올리기를 기다립니다');
+    return true;
+  }
+  if(!r.ok){ ghSetDot('err',r.msg); if(!quiet) toast(r.msg,4600); return false; }
+  let obj=null;
+  try{ obj=JSON.parse(r.text); }catch(e){ ghSetDot('err','원격 파일을 읽지 못했어요'); return false; }
+  const before=index.items.length;
+  const res=absorbBundle(obj&&Array.isArray(obj.projects)?obj:null);
+  if(obj&&!Array.isArray(obj.projects)&&Array.isArray(obj.frames)){
+    const data=normalize(obj), id=obj.pid||uid();
+    saveProjectData(id,data);
+    if(!index.items.some(x=>x.id===id)) index.items.unshift({id:id,name:projName(data),updated:Date.now(),cuts:data.frames.length});
+    index.activeId=id; writeIndex(index); res.added++;
+  }
+  ghPulled=true;
+  const n=(res?res.added+res.updated:0);
+  if(n){
+    if(index.activeId&&index.items.some(x=>x.id===index.activeId)) activeId=index.activeId;
+    state=loadProjectData(activeId)||state; applyState();
+    ghSetDot('on','원격에서 '+n+'개 가져옴 · '+ghTime());
+    if(!quiet) toast('원격에서 스토리보드 '+n+'개를 가져왔어요',4200);
+  }else{
+    ghSetDot('on','최신 상태 · '+ghTime());
+    if(!quiet) toast('이미 최신이에요 ('+before+'개)',3200);
+  }
+  return true;
+}
+
+/* 올리기 — Git Data API (용량 큰 스케치도 안전) */
+async function ghPush(quiet){
+  if(!ghReady()) return false;
+  if(!ghPulled){
+    const okPull=await ghPull(true);
+    if(!okPull){ if(!quiet) toast('먼저 내려받기가 실패해서 올리지 않았어요 (덮어쓰기 방지)',5200); return false; }
+  }
+  if(ghBusy) return false;
+  ghBusy=true;
+  ghSetDot('wait','올리는 중…');
+  try{
+    const payload=JSON.stringify(bundleObj());
+    const branch=ghCfg.branch||'main';
+    let refRes=await ghApi('GET',ghRepoUrl('/git/ref/heads/'+encodeURIComponent(branch)));
+    let parent=null, baseTree=null;
+    if(refRes.ok){ parent=refRes.data.object.sha; }
+    else if(refRes.status!==404){ throw new Error(refRes.msg||'브랜치를 읽지 못했어요'); }
+    if(parent){
+      const c=await ghApi('GET',ghRepoUrl('/git/commits/'+parent));
+      if(!c.ok) throw new Error(c.msg||'커밋을 읽지 못했어요');
+      baseTree=c.data.tree.sha;
+    }
+    const blob=await ghApi('POST',ghRepoUrl('/git/blobs'),{content:payload,encoding:'utf-8'});
+    if(!blob.ok) throw new Error(blob.msg||'업로드 실패');
+    const treeBody={tree:[{path:ghCfg.path,mode:'100644',type:'blob',sha:blob.data.sha}]};
+    if(baseTree) treeBody.base_tree=baseTree;
+    const tree=await ghApi('POST',ghRepoUrl('/git/trees'),treeBody);
+    if(!tree.ok) throw new Error(tree.msg||'트리 생성 실패');
+    const now=new Date();
+    const msg='SLATE 자동 저장 · '+now.getFullYear()+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+
+      String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+
+      ' ('+index.items.length+'개 프로젝트)';
+    const commitBody={message:msg,tree:tree.data.sha,parents:parent?[parent]:[]};
+    const commit=await ghApi('POST',ghRepoUrl('/git/commits'),commitBody);
+    if(!commit.ok) throw new Error(commit.msg||'커밋 생성 실패');
+    let upd;
+    if(parent){
+      upd=await ghApi('PATCH',ghRepoUrl('/git/refs/heads/'+encodeURIComponent(branch)),{sha:commit.data.sha,force:false});
+    }else{
+      upd=await ghApi('POST',ghRepoUrl('/git/refs'),{ref:'refs/heads/'+branch,sha:commit.data.sha});
+    }
+    if(!upd.ok){
+      if(upd.status===422||upd.status===409){
+        const again=await ghApi('PATCH',ghRepoUrl('/git/refs/heads/'+encodeURIComponent(branch)),{sha:commit.data.sha,force:false});
+        if(!again.ok) throw new Error('원격이 계속 바뀌고 있어요 — 잠시 뒤 다시 시도해 주세요');
+      }else throw new Error(upd.msg||'브랜치 갱신 실패');
+    }
+    ghCfg.lastSync=Date.now(); ghStore(ghCfg);
+    ghDirty=false;
+    ghSetDot('on','동기화됨 · '+ghTime());
+    if(!quiet) toast('깃허브에 올렸어요 · '+ghTime(),3200);
+    return true;
+  }catch(err){
+    ghSetDot('err',String(err.message||err));
+    if(!quiet) toast(String(err.message||err),5200);
+    return false;
+  }finally{
+    ghBusy=false;
+  }
+}
+function ghTime(){
+  const t=ghCfg.lastSync; if(!t) return '방금';
+  const d=new Date(t), pad=n=>String(n).padStart(2,'0');
+  return pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function ghTouch(){
+  if(!ghReady()||!ghCfg.auto||!ghPulled) return;
+  ghDirty=true; ghSetDot('wait','저장 대기…');
+  clearTimeout(ghTimer);
+  ghTimer=setTimeout(()=>{ if(ghDirty) ghPush(true); },3500);
+}
+
+/* 패널 열기 */
+function ghOpen(){
+  ghEl.modal.hidden=false; ghFill();
+  ghSetDot(ghPulled?'on':'',ghPulled?('연결됨 · '+ghTime()):(ghReady()?'저장을 누르면 연결합니다':'아직 연결하지 않았어요'));
+  setTimeout(()=>{ (ghCfg.token?ghEl.repo:ghEl.token).focus(); },60);
+}
+function ghClose(){ ghEl.modal.hidden=true; }
+
+function ghInit(){
+  ghEl.modal=$('#ghModal'); ghEl.dot=$('#ghDot'); ghEl.statDot=$('#ghStatDot'); ghEl.status=$('#ghStatus');
+  ghEl.repo=$('#ghRepo'); ghEl.branch=$('#ghBranch'); ghEl.path=$('#ghPath');
+  ghEl.token=$('#ghToken'); ghEl.auto=$('#ghAuto');
+  ghEl.dot.className='ghdot'+(ghReady()?'':'');
+  ghSetDot(ghReady()?'':'', ghReady()?(ghCfg.lastSync?'마지막 동기화 '+ghTime():'연결 대기'):'GitHub 동기화 설정');
+
+  on('#btnGh','click',ghOpen);
+  on('#ghModal','click',ev=>{ if(ev.target.closest('[data-close]')||ev.target===ghEl.modal) ghClose(); });
+  on('#ghSave','click',async()=>{
+    ghCfg.repo=(ghEl.repo.value||'').trim()||'jenzang2/slate';
+    ghCfg.branch=(ghEl.branch.value||'').trim()||'main';
+    ghCfg.path=(ghEl.path.value||'').trim()||'slate-data.json';
+    ghCfg.token=(ghEl.token.value||'').trim();
+    ghCfg.auto=!!ghEl.auto.checked;
+    ghStore(ghCfg);
+    ghPulled=false;
+    if(!ghCfg.token){ ghSetDot('','토큰이 비어 있어요 — 동기화 꺼짐'); toast('설정을 비웠어요'); return; }
+    const ok=await ghTest(true);
+    if(ok){ const p=await ghPull(true); ghClose(); toast(p?'연결하고 최신 내용을 가져왔어요':'연결됐어요 — 첫 ‘올리기’를 눌러주세요',4200); }
+  });
+  on('#ghTest','click',()=>ghTest(false));
+  on('#ghPull','click',()=>ghPull(false));
+  on('#ghPushOne','click',()=>ghPush(false));
+
+  document.addEventListener('keydown',ev=>{
+    if(ev.key==='Escape'&&ghEl.modal&&!ghEl.modal.hidden) ghClose();
+  });
+
+  if(ghReady()) ghPull(true);
+}
+
 /* 시작 */
 applyState();
+ghInit();
+if(bootMsg) toast(bootMsg,5600);
 })();
 
 </script>
