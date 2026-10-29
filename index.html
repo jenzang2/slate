@@ -455,9 +455,9 @@ select.txt{padding-right:24px;appearance:none;
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
       <span class="label">불러오기</span>
     </button>
-    <button class="btn ghost" id="btnExport" title="모든 스토리보드가 담긴 백업 파일 (다른 컴퓨터에서 열면 그대로 복원)">
+    <button class="btn ghost" id="btnExport" title="오프라인 백업 파일(.html) — 깃허브 동기화 중이면 평소엔 필요 없습니다">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
-      <span class="label">백업 저장</span>
+      <span class="label">백업 파일</span>
     </button>
     <button class="btn solid" id="btnPrint" title="인쇄 / PDF (Ctrl+P)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
@@ -1290,7 +1290,9 @@ on('#btnExport','click',()=>{
   saveState();
   const b=bundleObj();
   download(new Blob([buildExportHTML()],{type:'text/html'}),'SLATE-백업-'+stamp()+'.html');
-  toast('스토리보드 '+b.projects.length+'개를 담았어요 — 이 파일을 열면 어느 컴퓨터에서든 그대로 나옵니다',5200);
+  toast(ghReady()&&ghCfg.auto
+    ? '오프라인 백업 파일을 내려받았어요 — 평소엔 깃허브에 자동 저장되니 안 받아도 됩니다'
+    : '스토리보드 '+b.projects.length+'개를 담았어요 — 이 파일을 열면 그대로 나옵니다',5600);
 });
 on('#btnSave','click',()=>{
   saveState();
@@ -1618,17 +1620,48 @@ async function ghTest(quiet){
   return true;
 }
 
+/* 저장소 주소 조각 */
+function ghSlug(){
+  return ghCfg.repo.replace(/^https?:\/\/github\.com\//i,'').replace(/\s/g,'').replace(/\/+$/,'');
+}
+function ghRawUrl(){
+  const parts=ghSlug().split('/');
+  if(parts.length<2) return '';
+  return 'https://raw.githubusercontent.com/'+parts[0]+'/'+parts[1]+'/'+
+    encodeURIComponent(ghCfg.branch||'main')+'/'+
+    ghCfg.path.split('/').map(encodeURIComponent).join('/')+'?t='+Date.now();
+}
+/* 토큰 없이 원격 읽기 — 공개 저장소면 인증 없이도 최신 내용을 받아온다 */
+async function ghFetchRemote(){
+  if(!ghCfg.repo||!ghCfg.path) return {ok:false,empty:true};
+  let url=ghRawUrl();
+  if(url){
+    try{
+      const res=await fetch(url,{cache:'no-store'});
+      if(res.ok){ return {ok:true,text:await res.text()}; }
+      if(res.status===404) return {ok:false,empty:true};
+    }catch(e){}
+  }
+  if(!ghCfg.token) return {ok:false,empty:true,noauth:true};
+  const api=ghRepoUrl('/contents/'+encodeURI(ghCfg.path)+'?ref='+encodeURIComponent(ghCfg.branch)+'&t='+Date.now());
+  const r=await ghApi('GET',api,null,'application/vnd.github.raw');
+  if(r.ok) return {ok:true,text:r.text};
+  if(r.status===404) return {ok:false,empty:true};
+  return {ok:false,msg:r.msg};
+}
+
 /* 내려받기(병합) */
 async function ghPull(quiet){
-  if(!ghReady()) return false;
+  if(!ghCfg.repo||!ghCfg.path) return false;
   ghSetDot('wait','내려받는 중…');
-  const url=ghRepoUrl('/contents/'+encodeURI(ghCfg.path)+'?ref='+encodeURIComponent(ghCfg.branch)+'&t='+Date.now());
-  const r=await ghApi('GET',url,null,'application/vnd.github.raw');
-  if(!r.ok&&r.status===404){
-    ghPulled=true; ghSetDot('on','원격이 비어 있어요 — 첫 올리기를 기다립니다');
-    return true;
+  const r=await ghFetchRemote();
+  if(!r.ok&&r.empty){
+    ghPulled=true;
+    if(ghCfg.token) ghSetDot('on','원격이 비어 있어요 — 첫 올리기를 기다립니다');
+    else ghSetDot('','토큰 없이 보는 중 — 수정하려면 연결하세요');
+    return 'empty';
   }
-  if(!r.ok){ ghSetDot('err',r.msg); if(!quiet) toast(r.msg,4600); return false; }
+  if(!r.ok){ ghSetDot('err',r.msg||'원격을 읽지 못했어요'); if(!quiet) toast(r.msg||'원격을 읽지 못했어요',4600); return false; }
   let obj=null;
   try{ obj=JSON.parse(r.text); }catch(e){ ghSetDot('err','원격 파일을 읽지 못했어요'); return false; }
   const before=index.items.length;
@@ -1647,10 +1680,10 @@ async function ghPull(quiet){
     ghSetDot('on','원격에서 '+n+'개 가져옴 · '+ghTime());
     if(!quiet) toast('원격에서 스토리보드 '+n+'개를 가져왔어요',4200);
   }else{
-    ghSetDot('on','최신 상태 · '+ghTime());
+    ghSetDot('on',(ghCfg.token?'최신 상태 · ':'원격 최신 · ')+ghTime());
     if(!quiet) toast('이미 최신이에요 ('+before+'개)',3200);
   }
-  return true;
+  return 'synced';
 }
 
 /* 올리기 — Git Data API (용량 큰 스케치도 안전) */
@@ -1752,7 +1785,17 @@ function ghInit(){
     ghPulled=false;
     if(!ghCfg.token){ ghSetDot('','토큰이 비어 있어요 — 동기화 꺼짐'); toast('설정을 비웠어요'); return; }
     const ok=await ghTest(true);
-    if(ok){ const p=await ghPull(true); ghClose(); toast(p?'연결하고 최신 내용을 가져왔어요':'연결됐어요 — 첫 ‘올리기’를 눌러주세요',4200); }
+    if(ok){
+      const p=await ghPull(true);
+      ghClose();
+      if(p==='empty'){
+        toast('첫 커밋을 올리는 중…',2600);
+        const pushed=await ghPush(true);
+        toast(pushed?'연결 완료 — 이제 자동으로 저장됩니다':'연결됐지만 첫 업로드에 실패했어요. ‘깃허브 → 올리기’를 눌러주세요.',5200);
+      }else{
+        toast(p?'연결하고 최신 내용을 가져왔어요':'연결됐어요 — 첫 ‘올리기’를 눌러주세요',4200);
+      }
+    }
   });
   on('#ghTest','click',()=>ghTest(false));
   on('#ghPull','click',()=>ghPull(false));
@@ -1762,7 +1805,19 @@ function ghInit(){
     if(ev.key==='Escape'&&ghEl.modal&&!ghEl.modal.hidden) ghClose();
   });
 
-  if(ghReady()) ghPull(true);
+  /* 토큰이 없어도 공개 저장소면 최신 내용을 자동으로 가져온다 */
+  ghPull(true).then(r=>{
+    if(r==='synced'&&!ghCfg.token){
+      ghSetDot('','토큰 없이 보는 중 — 수정하려면 연결하세요');
+      return;
+    }
+    /* 원격이 비어 있고 토큰이 있으면 첫 커밋을 스스로 올린다 */
+    if(r==='empty'&&ghReady()&&ghCfg.auto){
+      ghPush(true).then(ok=>{
+        if(ok) toast('스토리보드를 깃허브에 처음 올렸어요 — 이제 자동 저장됩니다',4600);
+      });
+    }
+  });
 }
 
 /* 시작 */
