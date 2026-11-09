@@ -167,32 +167,37 @@ select.txt{padding-right:24px;appearance:none;
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
 }
 .mv:empty::before{content:attr(data-ph);color:#7E9086;font-weight:600}
-.grid{display:grid;gap:11px}
+.grid{display:grid;gap:11px;align-items:start}
 
 /* ── 컷 카드 ───────────────────────────── */
 .cut{
-  background:#fff;border-radius:11px;padding:9px 9px 8px;display:flex;flex-direction:column;
+  background:#fff;border-radius:11px;padding:8px 7px 7px;display:flex;flex-direction:column;
+  --lblw:min-content;
   box-shadow:0 1px 1px rgba(18,23,26,.05),0 3px 8px -4px rgba(18,23,26,.16);
   transition:box-shadow .18s;
 }
 .cut:hover{box-shadow:0 1px 1px rgba(18,23,26,.05),0 8px 18px -8px rgba(18,23,26,.28)}
-.cut-head{display:flex;align-items:flex-start;gap:7px;margin-bottom:7px}
 .num{
-  background:#12171A;color:#fff;font:700 10.5px/1 var(--mono);letter-spacing:.05em;
-  width:25px;height:22px;display:grid;place-items:center;border-radius:5px;flex:0 0 auto;
-  font-variant-numeric:tabular-nums;
+  position:absolute;top:5px;left:5px;z-index:3;pointer-events:none;
+  background:rgba(18,23,26,.78);color:#fff;font:700 8.5px/1 var(--mono);letter-spacing:.04em;
+  width:19px;height:15px;display:grid;place-items:center;border-radius:4px;
+  font-variant-numeric:tabular-nums;backdrop-filter:blur(2px);
 }
 .shottitle{flex:1;min-width:0}
 .ftitle{font-size:12.5px;font-weight:700;color:#0E1512;letter-spacing:-.015em;line-height:1.35}
 .ftitle:empty::before{font-weight:600;color:#B3BEB7}
 .lbl{display:block;font:800 9.5px/1 var(--sans);letter-spacing:.08em;color:#111A16;margin-bottom:3px}
 .field{
-  font-size:11px;line-height:1.5;color:#222B27;min-height:15px;white-space:pre-wrap;
+  font-size:10.6px;line-height:1.48;color:#222B27;min-height:15px;white-space:pre-wrap;
   word-break:break-word;outline:none;border-radius:4px;padding:0 1px;transition:box-shadow .15s;
 }
 .field:empty::before{content:attr(data-ph);color:var(--faint);font-weight:400}
 .field:focus{box-shadow:0 0 0 3px #E7F1E9;background:#F7FBF7}
-.cut-tools{display:flex;gap:1px;opacity:0;transition:.15s;margin:-3px -3px 0 0}
+.cut-tools{
+  position:absolute;top:4px;right:4px;z-index:5;display:flex;gap:1px;opacity:0;transition:.15s;
+  background:rgba(255,255,255,.94);border-radius:6px;padding:1px;
+  box-shadow:0 1px 5px rgba(18,23,26,.16);
+}
 .cut:hover .cut-tools,.cut:focus-within .cut-tools{opacity:1}
 .cut-tools button{
   border:0;background:transparent;color:#7E8C85;width:19px;height:19px;border-radius:4px;
@@ -202,7 +207,7 @@ select.txt{padding-right:24px;appearance:none;
 .cut-tools button[data-act="del"]:hover{background:#FCEDEA;color:#C2412C}
 
 .frame{
-  margin-top:auto;position:relative;height:0;padding-bottom:56.25%;background:#fff;
+  margin-top:0;position:relative;height:0;padding-bottom:56.25%;background:#fff;
   border:1px solid #DCE4DE;border-radius:5px;overflow:hidden;
 }
 .frame .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#fff}
@@ -239,18 +244,22 @@ select.txt{padding-right:24px;appearance:none;
 .shot select{appearance:none;text-align:center}
 .shot input{width:36px;flex:0 0 36px;text-align:center}
 
+.screen,.dlg,.etc{display:grid;grid-template-columns:min-content minmax(0,1fr);column-gap:4px;align-items:start}
 .screen{margin-top:6px;padding-top:6px;border-top:1px solid #EFF3EF}
 .dlg{margin-top:5px;padding-top:5px;border-top:1px solid #EFF3EF}
+.etc{margin-top:5px;padding-top:5px;border-top:1px dashed #EEF2EE}
+.screen>.lbl,.dlg>.lbl,.etc>.lbl{margin:0;padding-top:1px;line-height:1.32;text-align:left;white-space:nowrap;letter-spacing:0;font-size:9px}
+.dlgwrap{min-width:0}
 .dlg .lbl{color:#2F4A38}
-.dlgrows{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:start}
+.dlgrows{display:grid;grid-template-columns:auto max-content minmax(0,1fr) auto;align-items:start}
 .dlgrow{display:contents}
 .dlgspk,.dlgsay{
-  font-size:11px;line-height:1.5;color:#1D2A23;white-space:pre-wrap;word-break:break-word;
+  font-size:10.8px;line-height:1.46;color:#1D2A23;white-space:pre-wrap;word-break:break-word;
   outline:none;border-radius:4px;min-height:16.5px;padding:0 1px;
   transition:box-shadow .15s,background .15s;
 }
-.dlgspk{font-weight:700;color:#2A4234;padding-right:7px;max-width:7.5em;border-right:1.5px solid #CFE0D5}
-.dlgsay{padding-left:8px;font-weight:400}
+.dlgspk{font-weight:700;color:#2A4234;padding-right:5px;max-width:7.5em;border-right:1.5px solid #CFE0D5}
+.dlgsay{padding-left:5px;font-weight:400}
 .dlgspk:empty::before{content:attr(data-ph);color:#C4CFC8;font-weight:500}
 .dlgsay:empty::before{content:attr(data-ph);color:var(--faint);font-weight:400}
 .dlgspk:empty + .dlgsay{font-style:italic;color:#43524B}
@@ -260,8 +269,17 @@ select.txt{padding-right:24px;appearance:none;
 .dlgchip:hover{background:#D8E7DC;border-color:#B9D3C1}
 .dlgadd{font-size:10px;font-weight:700;color:#7A8B84;background:transparent;border:1px dashed #CFDCD4;border-radius:99px;padding:2px 8px;cursor:pointer;line-height:1.45;font-family:inherit}
 .dlgadd:hover{color:#2F4A38;border-color:#9EBFA8;background:#F4FAF5}
-.etc{margin-top:5px;padding-top:5px;border-top:1px dashed #EEF2EE}
-.etc .lbl{color:#7B8881;letter-spacing:.06em;font-weight:800;font-size:9px}
+.dlgdel{width:12px;height:15px;min-width:12px;flex:0 0 auto;margin:1px 0 0 1px;padding:0;display:flex;align-items:center;justify-content:center;border:0;border-radius:4px;background:transparent;color:#B9C6BF;cursor:pointer;opacity:.38;transition:opacity .12s,color .12s,background .12s}
+.dlgspk:hover ~ .dlgdel,.dlgsay:hover ~ .dlgdel,.dlgdel:hover,.dlgdel:focus-visible{opacity:1}
+.dlgdel:hover{color:#C4453A;background:#FBEDEB}
+.dlgdrag{width:9px;height:16px;padding:0;border:0;background:transparent;color:#B9C6BF;cursor:grab;opacity:.3;display:flex;align-items:center;justify-content:center;border-radius:3px;transition:opacity .12s,color .12s,background .12s;touch-action:none}
+.dlg:hover .dlgdrag{opacity:.8}
+.dlgdrag:hover,.dlgdrag:focus-visible{opacity:1;color:#3E4A44;background:#EEF4EF}
+.dlgdrag:active{cursor:grabbing}
+.dlgrow.dragging .dlgspk,.dlgrow.dragging .dlgsay,.dlgrow.dragging .dlgdrag{opacity:.35}
+.dlgrow.dropover .dlgspk,.dlgrow.dropover .dlgsay{box-shadow:inset 0 2px 0 0 #7FB08A}
+.dlgdel svg{display:block;pointer-events:none}
+.etc .lbl{color:#7B8881;letter-spacing:.06em!important;font-weight:800;font-size:9px}
 .etc .field{font-size:10.5px;color:#4A5852}
 .addtile{
   border:1.5px dashed #B9CDBE;background:rgba(255,255,255,.5);border-radius:11px;
@@ -393,9 +411,13 @@ select.txt{padding-right:24px;appearance:none;
   .cv{height:18px!important;font-size:9px!important;padding:0 6px!important;border-radius:4px!important}
   .ml{display:none!important}
   .mv{height:21px!important;font-size:10.5px!important;padding:0 8px!important}
-  .cut-head{gap:5px!important;margin-bottom:4px!important}
-  .num{width:20px!important;height:17px!important;font-size:8.5px!important}
-  .lbl{font-size:8px!important;margin-bottom:1px!important;letter-spacing:.05em!important}
+  .num{width:15px!important;height:12px!important;font-size:7px!important;top:3px!important;left:3px!important;border-radius:3px!important}
+  .lbl{font-size:8px!important;letter-spacing:.03em!important;padding-top:0!important}
+  .screen,.dlg,.etc{grid-template-columns:min-content minmax(0,1fr)!important;column-gap:3px!important}
+  .cut[data-rows="4"] .dlgspk,.cut[data-rows="4"] .dlgsay,.cut[data-rows="5"] .dlgspk,.cut[data-rows="5"] .dlgsay{font-size:8.6px!important;line-height:1.32!important}
+  .cut[data-rows="6"] .dlgspk,.cut[data-rows="6"] .dlgsay,.cut[data-rows="7"] .dlgspk,.cut[data-rows="7"] .dlgsay,.cut[data-rows="8"] .dlgspk,.cut[data-rows="8"] .dlgsay{font-size:8px!important;line-height:1.26!important}
+  .cut{break-inside:avoid;page-break-inside:avoid}
+  .sheet{break-inside:avoid;page-break-inside:avoid}
   .field{font-size:9.3px!important;line-height:1.42!important;min-height:0!important}
   .ftitle{font-size:10px!important;line-height:1.3!important}
   .frame{margin-top:3px!important}
@@ -409,6 +431,7 @@ select.txt{padding-right:24px;appearance:none;
     color:#93A199!important;letter-spacing:.04em}
   .dlgrow[data-empty="1"]{display:none!important}
   .dlgtools{display:none!important}
+  .dlgdel,.dlgdrag{display:none!important}
   .etc{margin-top:3px!important;padding-top:3px!important}
   .etc .lbl{font-size:7.5px!important}
   .etc .field{font-size:8.5px!important}
@@ -977,8 +1000,10 @@ function renderDlg(cutEl){
   if(!Array.isArray(f.dlg)||!f.dlg.length) f.dlg=[{s:'',t:''}];
   wrap.innerHTML=f.dlg.map((r,i)=>
     '<div class="dlgrow" data-i="'+i+'">'+
+      '<button type="button" class="dlgdrag" draggable="true" tabindex="-1" title="끌어서 순서 바꾸기" aria-label="끌어서 순서 바꾸기">'+'<svg width="7" height="11" viewBox="0 0 8 12" fill="currentColor"><circle cx="2" cy="2" r="1.15"/><circle cx="6" cy="2" r="1.15"/><circle cx="2" cy="6" r="1.15"/><circle cx="6" cy="6" r="1.15"/><circle cx="2" cy="10" r="1.15"/><circle cx="6" cy="10" r="1.15"/></svg></button>'+
       '<div class="dlgspk" contenteditable="true" spellcheck="false" data-d="s" data-ph="이름"></div>'+
       '<div class="dlgsay" contenteditable="true" spellcheck="false" data-d="t" data-ph="대사 · 내레이션"></div>'+
+      '<button type="button" class="dlgdel" data-d="x" title="이 대사 줄 삭제" aria-label="이 대사 줄 삭제">'+'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>'+
     '</div>').join('');
   Array.from(wrap.children).forEach((row,i)=>{
     row.querySelector('.dlgspk').textContent=f.dlg[i].s||'';
@@ -986,6 +1011,7 @@ function renderDlg(cutEl){
   });
   syncDlgRow(cutEl);
   fillChips(cutEl);
+  cutEl.dataset.rows=String(f.dlg.filter(function(r){return r.s||r.t;}).length||1);
 }
 function syncDlgRow(cutEl){
   const f=cutFrame(cutEl), dlg=cutEl.querySelector('.dlg');
@@ -1016,6 +1042,20 @@ function fillChips(cutEl){
   }).join('');
 }
 function refreshChips(){ $$('.cut').forEach(function(c){ fillChips(c); }); }
+function delDlgRow(cutEl,i){
+  const f=cutFrame(cutEl); if(!f||!Array.isArray(f.dlg)) return;
+  if(!(i>=0&&i<f.dlg.length)) return;
+  const refocus=i>0?i-1:(f.dlg.length>1?1:-1);
+  if(f.dlg.length<=1){ f.dlg[0]={s:'',t:''}; }
+  else f.dlg.splice(i,1);
+  renderDlg(cutEl); scheduleSave();
+  const rows=cutEl.querySelectorAll('.dlgrow');
+  if(!rows.length) return;
+  const at=Math.max(0,Math.min(refocus,i>-1?refocus:0));
+  const row=rows[at]||rows[rows.length-1];
+  const cell=row&&row.querySelector('.dlgsay');
+  if(cell) cell.focus();
+}
 function addDlgRowFill(cutEl,spk){
   const f=cutFrame(cutEl); if(!f) return;
   if(!Array.isArray(f.dlg)||!f.dlg.length) f.dlg=[{s:'',t:''}];
@@ -1028,6 +1068,8 @@ function addDlgRowFill(cutEl,spk){
   if(cell) cell.focus();
 }
 board.addEventListener('click',function(ev){
+  const del=ev.target.closest('.dlgdel');
+  if(del){ delDlgRow(del.closest('.cut'),Number(del.closest('.dlgrow').dataset.i)); return; }
   const add=ev.target.closest('.dlgadd');
   if(add){ addDlgRowFill(add.closest('.cut'),''); return; }
   const chip=ev.target.closest('.dlgchip');
@@ -1038,23 +1080,65 @@ document.addEventListener('input',function(ev){
   if(t&&t.closest&&t.closest('[data-cast]')) refreshChips();
 },true);
 
+/* ── 대사 줄 드래그로 순서 바꾸기 ── */
+let dlgDrag=null;
+board.addEventListener('dragstart',function(ev){
+  const h=ev.target.closest&&ev.target.closest('.dlgdrag');
+  if(!h) return;
+  const row=h.closest('.dlgrow'), cutEl=h.closest('.cut');
+  if(!row||!cutEl) return;
+  dlgDrag={cut:cutEl.dataset.id,from:Number(row.dataset.i)};
+  row.classList.add('dragging');
+  try{ ev.dataTransfer.effectAllowed='move'; ev.dataTransfer.setData('text/plain','dlgrow'); }catch(e){}
+});
+board.addEventListener('dragover',function(ev){
+  if(!dlgDrag) return;
+  const row=ev.target.closest&&ev.target.closest('.dlgrow');
+  if(!row) return;
+  const cutEl=row.closest('.cut');
+  if(!cutEl||cutEl.dataset.id!==dlgDrag.cut) return;
+  ev.preventDefault();
+  try{ ev.dataTransfer.dropEffect='move'; }catch(e){}
+  board.querySelectorAll('.dlgrow.dropover').forEach(function(r){ if(r!==row) r.classList.remove('dropover'); });
+  row.classList.add('dropover');
+});
+board.addEventListener('drop',function(ev){
+  if(!dlgDrag) return;
+  const row=ev.target.closest&&ev.target.closest('.dlgrow');
+  if(!row) return;
+  const cutEl=row.closest('.cut');
+  if(!cutEl||cutEl.dataset.id!==dlgDrag.cut) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const to=Number(row.dataset.i), from=dlgDrag.from;
+  dlgDrag=null;
+  const f=cutFrame(cutEl);
+  if(f&&from>=0&&to>=0&&from!==to){
+    const moved=f.dlg.splice(from,1)[0];
+    f.dlg.splice(to,0,moved);
+    renderDlg(cutEl); scheduleSave();
+    toast('대사 순서를 바꿨어요',1800);
+  }else{
+    renderDlg(cutEl);
+  }
+});
+board.addEventListener('dragend',function(){
+  if(!dlgDrag) return;
+  dlgDrag=null;
+  board.querySelectorAll('.dlgrow.dragging,.dlgrow.dropover').forEach(function(r){ r.classList.remove('dragging','dropover'); });
+});
+
 function cardEl(f,idx){
   const el=document.createElement('article');
   el.className='cut'; el.dataset.id=f.id;
   el.innerHTML=
-    '<div class="cut-head">'+
+    '<div class="frame">'+
       '<span class="num">'+String(idx+1).padStart(2,'0')+'</span>'+
-      '<div class="shottitle">'+
-        '<div class="field ftitle" contenteditable="true" data-k="title" data-ph="샷 제목" spellcheck="false"></div>'+
-      '</div>'+
       '<div class="cut-tools">'+
         '<button data-act="left" title="앞 컷으로">'+I.left+'</button>'+
         '<button data-act="right" title="뒤 컷으로">'+I.right+'</button>'+
         '<button data-act="dup" title="이 컷 복제">'+I.copy+'</button>'+
         '<button data-act="del" title="이 컷 삭제">'+I.trash+'</button>'+
       '</div>'+
-    '</div>'+
-    '<div class="frame">'+
       '<img class="ph" alt="" data-empty="1">'+
       '<canvas width="'+CW+'" height="'+CH+'"></canvas>'+
       '<div class="hint">이미지 · 스케치<span>도구는 마우스를 올리면 나타납니다</span></div>'+
@@ -1071,18 +1155,17 @@ function cardEl(f,idx){
       '<select data-k="move">'+options(MOVES,f.move,'무브')+'</select>'+
       '<input data-k="sec" inputmode="decimal" placeholder="초" value="'+esc(f.sec)+'">'+
     '</div>'+
-    '<div class="screen"><span class="lbl">화면 설명</span>'+
-      '<div class="field" contenteditable="true" data-k="screen" data-ph="배우의 행동이나 화면 연출에 관해 여기 자세히 적어보세요." spellcheck="false"></div>'+
+    '<div class="screen"><span class="lbl">설명</span>'+
+      '<div class="field" contenteditable="true" data-k="screen" data-ph="배우의 행동이나 화면 연출" spellcheck="false"></div>'+
     '</div>'+
     '<div class="dlg"><span class="lbl">대사</span>'+
-      '<div class="dlgrows"></div>'+
-      '<div class="dlgtools"><button type="button" class="dlgadd" title="대사 줄 추가">+ 대사</button><span class="dlgchips"></span></div>'+
+      '<div class="dlgwrap"><div class="dlgrows"></div>'+
+      '<div class="dlgtools"><button type="button" class="dlgadd" title="대사 줄 추가">+ 대사</button><span class="dlgchips"></span></div></div>'+
     '</div>'+
     '<div class="etc"><span class="lbl">기타</span>'+
-      '<div class="field" contenteditable="true" data-k="etc" data-ph="준비물 · 소품 · 로케이션 · 인원 등" spellcheck="false"></div>'+
+      '<div class="field" contenteditable="true" data-k="etc" data-ph="소품 · 로케이션 · 인원" spellcheck="false"></div>'+
     '</div>';
 
-  el.querySelector('[data-k="title"]').textContent=f.title||'';
   el.querySelector('[data-k="screen"]').textContent=f.screen||'';
   renderDlg(el);
   el.querySelector('[data-k="etc"]').textContent=f.etc||'';
