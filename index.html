@@ -1678,6 +1678,7 @@ function ghLoad(){
 function ghStore(c){ try{ localStorage.setItem(GH_KEY,JSON.stringify(c)); }catch(e){} }
 let ghCfg=ghLoad();
 let ghPulled=false, ghBusy=false, ghTimer=null, ghDirty=false;
+let ghPending=false, ghFail=0, ghNextTry=0, ghLastSent='', ghLastErr='', ghLastErrToast='', ghLastErrAt=0;
 
 const ghEl={
   modal:null, dot:null, statDot:null, status:null,
@@ -1898,39 +1899,67 @@ async function migrateLegacyPhotos(){
 }
 
 /* 올리기 — Git Data API (용량 큰 스케치도 안전) */
-async function ghPush(quiet){
+async function ghPush(quiet,force){
   if(!ghReady()) return false;
   if(!ghPulled){
     const okPull=await ghPull(true);
     if(!okPull){ if(!quiet) toast('먼저 내려받기가 실패해서 올리지 않았어요 (덮어쓰기 방지)',5200); return false; }
   }
-  if(ghBusy) return false;
+  if(ghBusy){ ghPending=true; return false; }
+  const waitLeft=ghNextTry-Date.now();
+  if(waitLeft>0 && !force){
+    ghSetDot('err',(ghLastErr||'오류')+' · '+Math.ceil(waitLeft/1000)+'초 뒤 다시 시도');
+    return false;
+  }
   ghBusy=true;
   ghSetDot('wait','올리는 중…');
   try{
-    await migrateLegacyPhotos();
+    try{ await migrateLegacyPhotos(); }catch(e){}
+    const text=JSON.stringify(bundleObj());
+    if(text===ghLastSent && !force){
+      ghDirty=false; ghFail=0; ghNextTry=0; ghLastErr='';
+      ghSetDot('on',(ghCfg.lastSync?'변경 없음 · '+ghTime():'최신 상태'));
+      if(!quiet) toast('바뀐 내용이 없어서 올리지 않았어요',3200);
+      return true;
+    }
     const now=new Date();
     const msg='SLATE 자동 저장 · '+now.getFullYear()+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+
       String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+
       ' ('+index.items.length+'개 프로젝트)';
-    await ghCommit([{path:ghCfg.path,text:JSON.stringify(bundleObj())}],msg);
+    await ghCommit([{path:ghCfg.path,text:text}],msg);
+    ghLastSent=text;
     ghCfg.lastSync=Date.now(); ghStore(ghCfg);
-    ghDirty=false;
+    ghDirty=false; ghFail=0; ghNextTry=0; ghLastErr='';
     ghSetDot('on','동기화됨 · '+ghTime());
     if(!quiet) toast('깃허브에 올렸어요 · '+ghTime(),3200);
     return true;
   }catch(err){
-    let m=String(err.message||err);
+    ghFail++;
+    let m=String((err&&err.message)||err).replace(/\s+/g,' ').trim();
     if(/403/.test(m)||/권한/.test(m)){
-      m='쓰기 권한이 없어요 — GitHub에서 토큰의 Contents 권한을 Read and write 로 바꿔주세요';
+      m='쓰기 권한이 없어요 — GitHub 토큰의 Contents 권한을 Read and write 로 바꿔주세요';
     }
+    ghLastErr=m;
+    ghNextTry=Date.now()+Math.min(120000,15000*Math.pow(2,Math.min(3,ghFail-1)));
     ghSetDot('err',m);
-    ghEl.status.textContent=m;
-    ghEl.modal.hidden=false; ghFill();
-    toast(m,7000);
+    if(!quiet){
+      ghEl.status.textContent=m;
+      ghEl.modal.hidden=false; ghFill();
+      ghEl.status.textContent=m;
+    }
+    const t=Date.now();
+    if(!quiet || ghLastErrToast!==m || t-ghLastErrAt>45000){
+      ghLastErrToast=m; ghLastErrAt=t;
+      toast(quiet?('자동 저장 실패 — '+m+' (잠시 뒤 다시 시도)'):m, quiet?6000:7600);
+    }
     return false;
   }finally{
     ghBusy=false;
+    if(ghPending){
+      ghPending=false;
+      clearTimeout(ghTimer);
+      ghTimer=setTimeout(()=>{ if(ghDirty) ghPush(true); },1200);
+    }
   }
 }
 function ghTime(){
@@ -1940,9 +1969,12 @@ function ghTime(){
 }
 function ghTouch(){
   if(!ghReady()||!ghCfg.auto||!ghPulled) return;
-  ghDirty=true; ghSetDot('wait','저장 대기…');
+  ghDirty=true;
+  const waitLeft=ghNextTry-Date.now();
+  if(waitLeft>0) ghSetDot('err',(ghLastErr||'오류')+' · '+Math.ceil(waitLeft/1000)+'초 뒤 다시 시도');
+  else ghSetDot('wait','저장 대기…');
   clearTimeout(ghTimer);
-  ghTimer=setTimeout(()=>{ if(ghDirty) ghPush(true); },3500);
+  ghTimer=setTimeout(()=>{ if(ghDirty) ghPush(true); }, waitLeft>0?Math.min(Math.max(waitLeft,15000),60000):6000);
 }
 
 /* 패널 열기 */
