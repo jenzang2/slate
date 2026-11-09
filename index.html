@@ -451,6 +451,7 @@ select.txt{padding-right:24px;appearance:none;
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       <span class="label">컷 추가</span>
     </button>
+    <button class="btn ghost" id="btnRcv" title="저장소에 남았지만 컷과 연결이 끊긴 사진을 다시 붙이기">사진 복구</button>
     <button class="btn ghost" id="btnGh" title="GitHub 자동 동기화 — 컴퓨터를 바꿔도 이어서 작업">
       <span class="ghdot" id="ghDot"></span><span class="label">깃허브</span>
     </button>
@@ -903,7 +904,19 @@ async function idbPut(key,blob){
       const tx=db.transaction(IDB_STORE,'readwrite').objectStore(IDB_STORE).put(blob,key);
       tx.onsuccess=()=>res(); tx.onerror=()=>rej(tx.error);
     });
-  }catch(e){}
+  }catch(e){ return false; }
+  return true;
+}
+async function idbAll(){
+  try{
+    const db=await idbOpen();
+    return await new Promise((res,rej)=>{
+      const out=[];
+      const rq=db.transaction(IDB_STORE,'readonly').objectStore(IDB_STORE).openCursor();
+      rq.onsuccess=()=>{ const c=rq.result; if(!c) return res(out); out.push({key:String(c.key),blob:c.value}); c.continue(); };
+      rq.onerror=()=>rej(rq.error);
+    });
+  }catch(e){ return []; }
 }
 function ghRawBase(){
   const parts=ghCfg.repo.replace(/^https?:\/\/github\.com\//i,'').replace(/\/+$/,'').split('/');
@@ -942,7 +955,7 @@ async function photoSrc(f){
       const r=await fetch(url,{cache:'force-cache'});
       if(r.ok){ const b=await r.blob(); idbPut(key,b); const u=URL.createObjectURL(b); photoURLs.set(key,u); return u; }
     }catch(e){}
-    return url;
+    return '';   /* 저장소에서도 못 받으면 깨진 이미지 대신 빈 프레임 */
   }
   if(f.canvas) return f.canvas;   /* 옛 방식(합성 PNG) */
   return '';
@@ -1154,46 +1167,82 @@ function initCanvas(art,f){
   cv.addEventListener('pointercancel',end);
 }
 
-function putImage(art,f,file){
+async function putImage(art,f,file){
   if(!art._cv){ return; }
   const c=art._cv, ph=c.ph;
   const url=URL.createObjectURL(file);
   ph.onload=()=>{
     ph.dataset.empty='0';
     art.classList.add('has-ink');
-    delete f.canvas;
     scheduleSave();
   };
   ph.onerror=()=>toast('이미지를 읽지 못했어요');
   ph.src=url;
-  /* 원본 바이트 그대로 저장소에 올린다 (화질 손실 없음) */
-  uploadPhoto(f,file).then(path=>{
-    if(!path) return;
-    photoURLs.set(path,url);
-    f.photo={path:path,mime:file.type||'image/jpeg'};
-    scheduleSave();
-  });
+
+  /* ① 원본 바이트를 먼저 이 브라우저에 넣고 '경로'를 확정한다.
+     업로드가 늦거나 실패해도 새로고침 후 사진이 남게 하려는 것. */
+  let buf=null;
+  try{ buf=await file.arrayBuffer(); }catch(e){ buf=null; }
+  if(!buf){ toast('이 사진을 읽지 못했어요'); return; }
+  const mime=file.type||'image/jpeg';
+  const hash=await sha1Hex(buf);
+  const ext=(mime.split('/')[1]||'jpg').replace('jpeg','jpg').replace('+xml','');
+  const path='shots/'+hash+'.'+ext;
+  const cached=await idbPut(path,new Blob([buf],{type:mime}));
+
+  photoURLs.set(path,url);
+  f.photo={path:path,mime:mime,pending:1};
+  if(cached) delete f.canvas;       /* 캐시에 들어간 걸 확인한 뒤에만 옛 합성본을 버린다 */
+  scheduleSave();                    /* ← 업로드보다 먼저 저장한다. 여기가 핵심 */
+
+  const ok=await uploadPhoto(f,buf,mime,path);
+  if(ok){ delete f.photo.pending; scheduleSave(); }
 }
 
 /* 사진 파일을 저장소 shots/ 에 커밋 */
-async function uploadPhoto(f,file){
-  if(!ghReady()){ toast('사진은 깃허브에 연결해야 저장됩니다 — 지금은 이 브라우저에만 보관',5200); return ''; }
-  let buf=null;
-  try{ buf=await file.arrayBuffer(); }catch(e){ return ''; }
-  const hash=await sha1Hex(buf);
-  const ext=((file.type||'image/jpeg').split('/')[1]||'jpg').replace('jpeg','jpg').replace('+xml','');
-  const path='shots/'+hash+'.'+ext;
-  try{ await idbPut(path,new Blob([buf],{type:file.type||'image/jpeg'})); }catch(e){}
+async function uploadPhoto(f,buf,mime,path){
+  if(!buf||!path) return false;
+  if(!ghReady()){
+    toast('사진은 이 브라우저에만 보관했어요 — 깃허브에 연결하면 자동으로 올라갑니다',5200);
+    return false;
+  }
   ghSetDot('wait','사진 올리는 중…');
   try{
     await ghCommit([{path:path,base64:toB64(buf)}],'SLATE 사진 · '+path);
     ghSetDot('on','사진 저장됨 ('+(buf.byteLength/1048576).toFixed(1)+'MB)');
-    return path;
+    return true;
   }catch(err){
-    ghSetDot('err','사진 업로드 실패 — '+String(err.message||err));
-    toast('사진을 깃허브에 올리지 못했어요: '+String(err.message||err),6000);
-    return '';
+    const m=String((err&&err.message)||err);
+    ghSetDot('err','사진 업로드 실패 — '+m);
+    toast('사진을 깃허브에 올리지 못했어요 — 이 브라우저에는 남아 있고, 연결되면 다시 시도합니다: '+m,6500);
+    return false;
   }
+}
+
+/* 아직 저장소에 못 올린 사진들을 다시 시도 */
+let retryBusy=false;
+async function retryPendingPhotos(){
+  if(retryBusy||!ghReady()) return;
+  retryBusy=true;
+  const targets=[];
+  index.items.forEach(it=>{
+    const d=(it.id===activeId)?state:loadProjectData(it.id);
+    if(!d||!Array.isArray(d.frames)) return;
+    d.frames.forEach(f=>{ if(f.photo&&f.photo.path&&f.photo.pending) targets.push({id:it.id,d:d,f:f}); });
+  });
+  let n=0;
+  for(const t of targets){
+    const blob=await idbGet(t.f.photo.path);
+    if(!blob) continue;
+    try{
+      const buf=await blob.arrayBuffer();
+      await ghCommit([{path:t.f.photo.path,base64:toB64(buf)}],'SLATE 사진 · '+t.f.photo.path);
+      delete t.f.photo.pending; n++;
+      if(t.id===activeId) scheduleSave(); else saveProjectData(t.id,t.d);
+    }catch(e){ break; }
+  }
+  retryBusy=false;
+  if(n) toast('사진 '+n+'장을 저장소에 다시 올렸어요',4200);
 }
 
 /* ── 상호작용 ─────────────────────────── */
@@ -2049,7 +2098,78 @@ ghInit();
 if(bootMsg) toast(bootMsg,5600);
 })();
 
+
+/* ── 떨어진 사진 되살리기 ─────────────── */
+const rcvModal=$('#rcvModal'), rcvBody=$('#rcvBody');
+function closeRcv(){ rcvModal.hidden=true; document.body.style.overflow=''; }
+async function openRcv(){
+  const refs=new Set();
+  index.items.forEach(it=>{
+    const d=(it.id===activeId)?state:loadProjectData(it.id);
+    if(d&&Array.isArray(d.frames)) d.frames.forEach(f=>{ if(f.photo&&f.photo.path) refs.add(f.photo.path); });
+  });
+  const all=await idbAll();
+  const orph=all.filter(o=>!refs.has(o.key)&&/^shots\//.test(o.key));
+  if(!orph.length){ toast('되살릴 사진이 없어요 — 사진이 모두 컷에 연결되어 있습니다',4400); return; }
+  const S='style="';
+  const opts=state.frames.map((f,i)=>'<option value="'+f.id+'">'+String(i+1).padStart(2,'0')+(f.title?' · '+esc(f.title):'')+'</option>').join('');
+  rcvBody.innerHTML=
+    '<p style="margin:4px 0 14px;font-size:12.5px;line-height:1.6;color:#5B6B64">이 브라우저에는 남아 있지만 어느 컷에도 연결되지 않은 사진 <b>'+orph.length+'장</b>입니다. 새로고침 전에 넣었던 사진이라면 여기 있을 가능성이 큽니다. 붙일 컷을 고르세요.</p>'+
+    orph.map(o=>{
+      const u=URL.createObjectURL(o.blob);
+      return '<div class="rcvrow" data-key="'+esc(o.key)+'" '+S+'display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #E7EDE9">'+
+        '<img src="'+u+'" alt="" '+S+'width:88px;height:49px;object-fit:cover;border-radius:7px;flex:0 0 auto;background:#F2F8F3">'+
+        '<div '+S+'flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:11px;color:#7A8B84">'+
+          '<b '+S+'font-size:11.5px;color:#0F1613">'+esc(o.key.split('/').pop())+'</b>'+
+          '<span>'+(o.blob.size/1048576).toFixed(1)+'MB · '+(o.blob.type||'이미지')+'</span>'+
+        '</div>'+
+        '<select class="rcvsel" '+S+'font-size:12px;padding:6px;border:1px solid #DCE4DE;border-radius:7px;max-width:132px">'+opts+'</select>'+
+        '<button class="btn ghost rcvgo" '+S+'height:30px;padding:0 11px;font-size:12px">붙이기</button>'+
+      '</div>';
+    }).join('');
+  rcvModal.hidden=false; document.body.style.overflow='hidden';
+}
+on('#btnRcv','click',openRcv);
+rcvModal.addEventListener('click',ev=>{ if(ev.target.closest('[data-close]')||ev.target===rcvModal) closeRcv(); });
+rcvBody.addEventListener('click',ev=>{
+  const btn=ev.target.closest('.rcvgo'); if(!btn) return;
+  const row=btn.closest('.rcvrow'), key=row.dataset.key;
+  const id=row.querySelector('.rcvsel').value;
+  const f=state.frames.find(x=>x.id===id);
+  if(!f){ toast('그 컷을 찾지 못했어요'); return; }
+  const ext=(key.split('.').pop()||'jpg').toLowerCase();
+  f.photo={path:key,mime:ext==='png'?'image/png':('image/'+(ext==='jpg'?'jpeg':ext))};
+  delete f.canvas;
+  photoURLs.delete(key);
+  saveState(); renderBoard();
+  row.remove();
+  toast('사진을 붙였어요 — 저장소에도 올리는 중',4200);
+  (async()=>{
+    const blob=await idbGet(key); if(!blob) return;
+    if(!ghReady()) return;
+    try{
+      const buf=await blob.arrayBuffer();
+      await ghCommit([{path:key,base64:toB64(buf)}],'SLATE 사진 복구 · '+key);
+      ghSetDot('on','사진 저장됨');
+    }catch(e){ toast('저장소 업로드는 실패 — 다시 시도해 주세요',4800); }
+  })();
+});
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'&&rcvModal&&!rcvModal.hidden) closeRcv(); });
+setTimeout(()=>{ retryPendingPhotos(); },6000);
+
 </script>
+
+<div class="modal" id="rcvModal" hidden>
+  <div class="panel" role="dialog" aria-modal="true" style="max-width:600px">
+    <div class="panel-head">
+      <h2>떨어진 사진 되살리기</h2>
+      <button class="px" data-close="1" title="닫기" aria-label="닫기">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="rcvBody" style="padding:6px 18px 18px"></div>
+  </div>
+</div>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
