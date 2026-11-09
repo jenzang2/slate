@@ -649,6 +649,25 @@ const MOVES=['고정','팬','틸트','달리','트래킹','핸드헬드','크레
 const tool={color:'#12171A',size:5,eraser:false};
 const todayKR=()=>{const d=new Date();return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';};
 const blank=()=>({id:nid(),title:'',screen:'',dlg:[{s:'',t:''}],etc:'',photo:null,ink:null,canvas:null,size:'',move:'',sec:''});
+
+/* 컷 복제 — dlg/photo까지 반드시 새 객체로. 얕은 복사하면 두 컷이 같은 대사 배열을 쓰게 된다 */
+function cloneFrame(f){
+  const cp={id:nid(),title:f.title||'',screen:f.screen||'',etc:f.etc||'',
+    size:f.size||'',move:f.move||'',sec:f.sec||'',
+    dlg:(Array.isArray(f.dlg)?f.dlg:[]).map(function(r){ return {s:(r&&r.s)||'',t:(r&&r.t)||''}; }),
+    photo:f.photo?{path:f.photo.path,mime:f.photo.mime}:null,
+    ink:f.ink||null, canvas:f.canvas||null};
+  if(f.photo&&f.photo.pending) cp.photo.pending=1;
+  return cp;
+}
+/* 같은 id가 두 개면 편집이 엉뚱한 컷에 적용된다 */
+function ensureUniqueIds(){
+  const seen={};
+  state.frames.forEach(function(f){
+    if(!f.id||seen[f.id]) f.id=nid();
+    seen[f.id]=1;
+  });
+}
 const DEFAULTS=()=>({
   title:'',cast:'',director:'',ad:'',dop:'',staff:'',
   cols:3,rows:2,showShot:false,frames:Array.from({length:6},blank)
@@ -702,7 +721,7 @@ function normalize(s){
     if(f.etc===undefined) f.etc='';
     if(f.photo===undefined) f.photo=null;
     if(f.ink===undefined) f.ink=null;
-    f.dlg=migrateDlg(f.dlg,f.line);
+    f.dlg=migrateDlg(f.dlg,f.line).map(function(r){ return {s:(r&&r.s)||'',t:(r&&r.t)||''}; });
     delete f.line;
   });
   return out;
@@ -1199,6 +1218,7 @@ function addTile(){
 }
 
 function renderBoard(){
+  ensureUniqueIds();
   /* 스크롤 보존: innerHTML을 비우는 순간 문서 높이가 0에 가까워져 맨 위로 튀는 것을 막는다 */
   const sc=document.scrollingElement||document.documentElement;
   const keepY=sc?sc.scrollTop:0;
@@ -1388,7 +1408,7 @@ board.addEventListener('click',ev=>{
     if(i<0) return;
     if(act==='left'&&i>0){ const t=state.frames[i-1]; state.frames[i-1]=state.frames[i]; state.frames[i]=t; renderBoard(); scheduleSave(); }
     else if(act==='right'&&i<state.frames.length-1){ const t=state.frames[i+1]; state.frames[i+1]=state.frames[i]; state.frames[i]=t; renderBoard(); scheduleSave(); }
-    else if(act==='dup'){ const src=state.frames[i]; const cp=Object.assign({},src,{id:nid()}); state.frames.splice(i+1,0,cp); renderBoard(); scheduleSave(); toast('컷을 복제했어요'); }
+    else if(act==='dup'){ const cp=cloneFrame(state.frames[i]); state.frames.splice(i+1,0,cp); renderBoard(); scheduleSave(); toast('컷을 복제했어요'); }
     else if(act==='del'){
       const f=state.frames[i];
       const dirty=(f.title||f.screen||f.etc||f.canvas||f.photo||f.ink||f.sec||(f.dlg||[]).some(r=>r.s||r.t));
