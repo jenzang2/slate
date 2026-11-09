@@ -255,6 +255,11 @@ select.txt{padding-right:24px;appearance:none;
 .dlgsay:empty::before{content:attr(data-ph);color:var(--faint);font-weight:400}
 .dlgspk:empty + .dlgsay{font-style:italic;color:#43524B}
 .dlgspk:focus,.dlgsay:focus{box-shadow:0 0 0 3px #E7F1E9;background:#F7FBF7}
+.dlgtools{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:6px}
+.dlgchip{font-size:10px;font-weight:700;color:#2F4A38;background:#EEF6F0;border:1px solid #D8E7DC;border-radius:99px;padding:2px 8px;cursor:pointer;line-height:1.45;font-family:inherit}
+.dlgchip:hover{background:#D8E7DC;border-color:#B9D3C1}
+.dlgadd{font-size:10px;font-weight:700;color:#7A8B84;background:transparent;border:1px dashed #CFDCD4;border-radius:99px;padding:2px 8px;cursor:pointer;line-height:1.45;font-family:inherit}
+.dlgadd:hover{color:#2F4A38;border-color:#9EBFA8;background:#F4FAF5}
 .etc{margin-top:5px;padding-top:5px;border-top:1px dashed #EEF2EE}
 .etc .lbl{color:#7B8881;letter-spacing:.06em;font-weight:800;font-size:9px}
 .etc .field{font-size:10.5px;color:#4A5852}
@@ -403,6 +408,7 @@ select.txt{padding-right:24px;appearance:none;
   .dlgspk:empty::before{content:'NAR.'!important;font:700 7.4px/1.45 var(--mono)!important;
     color:#93A199!important;letter-spacing:.04em}
   .dlgrow[data-empty="1"]{display:none!important}
+  .dlgtools{display:none!important}
   .etc{margin-top:3px!important;padding-top:3px!important}
   .etc .lbl{font-size:7.5px!important}
   .etc .field{font-size:8.5px!important}
@@ -979,6 +985,7 @@ function renderDlg(cutEl){
     row.querySelector('.dlgsay').textContent=f.dlg[i].t||'';
   });
   syncDlgRow(cutEl);
+  fillChips(cutEl);
 }
 function syncDlgRow(cutEl){
   const f=cutFrame(cutEl), dlg=cutEl.querySelector('.dlg');
@@ -989,6 +996,47 @@ function syncDlgRow(cutEl){
   });
   dlg.dataset.off=f.dlg.some(r=>r.s||r.t)?'0':'1';
 }
+
+/* ── 화자 후보(출연진) · 대사 줄 추가 ── */
+function castNames(){
+  const raw=String(state.cast||'');
+  const out=[];
+  raw.split(/\r?\n/).forEach(function(line){
+    const l=line.trim(); if(!l) return;
+    const n=l.split(/[:：]/)[0].replace(/\s*역\s*$/,'').trim();
+    if(!n||n.length>16) return;
+    if(out.indexOf(n)<0) out.push(n);
+  });
+  return out;
+}
+function fillChips(cutEl){
+  const box=cutEl.querySelector('.dlgchips'); if(!box) return;
+  box.innerHTML=castNames().map(function(n){
+    return '<button type="button" class="dlgchip" data-spk="'+esc(n).replace(/"/g,'&quot;')+'" title="'+esc(n)+' 대사 줄 추가">'+esc(n)+'</button>';
+  }).join('');
+}
+function refreshChips(){ $$('.cut').forEach(function(c){ fillChips(c); }); }
+function addDlgRowFill(cutEl,spk){
+  const f=cutFrame(cutEl); if(!f) return;
+  if(!Array.isArray(f.dlg)||!f.dlg.length) f.dlg=[{s:'',t:''}];
+  f.dlg.push({s:spk||'',t:''});
+  renderDlg(cutEl); scheduleSave();
+  const rows=cutEl.querySelectorAll('.dlgrow');
+  const row=rows[rows.length-1];
+  if(!row) return;
+  const cell=row.querySelector(spk?'.dlgsay':'.dlgspk');
+  if(cell) cell.focus();
+}
+board.addEventListener('click',function(ev){
+  const add=ev.target.closest('.dlgadd');
+  if(add){ addDlgRowFill(add.closest('.cut'),''); return; }
+  const chip=ev.target.closest('.dlgchip');
+  if(chip){ addDlgRowFill(chip.closest('.cut'),chip.dataset.spk||''); }
+});
+document.addEventListener('input',function(ev){
+  const t=ev.target;
+  if(t&&t.closest&&t.closest('[data-cast]')) refreshChips();
+},true);
 
 function cardEl(f,idx){
   const el=document.createElement('article');
@@ -1028,6 +1076,7 @@ function cardEl(f,idx){
     '</div>'+
     '<div class="dlg"><span class="lbl">대사</span>'+
       '<div class="dlgrows"></div>'+
+      '<div class="dlgtools"><button type="button" class="dlgadd" title="대사 줄 추가">+ 대사</button><span class="dlgchips"></span></div>'+
     '</div>'+
     '<div class="etc"><span class="lbl">기타</span>'+
       '<div class="field" contenteditable="true" data-k="etc" data-ph="준비물 · 소품 · 로케이션 · 인원 등" spellcheck="false"></div>'+
