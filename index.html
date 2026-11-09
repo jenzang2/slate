@@ -205,13 +205,16 @@ select.txt{padding-right:24px;appearance:none;
   margin-top:auto;position:relative;height:0;padding-bottom:56.25%;background:#fff;
   border:1px solid #DCE4DE;border-radius:5px;overflow:hidden;
 }
-.frame canvas{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.frame .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#fff}
+.frame canvas{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;
+  background:transparent}
 .frame .hint{
   position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:3px;
   text-align:center;font-size:9.5px;font-weight:600;color:#B3BEB7;pointer-events:none;padding:0 12px;
 }
 .frame .hint span{font-size:8.5px;font-weight:500;color:#C6D0C9}
 .cut.has-ink .hint{display:none}
+.frame .ph[data-empty="1"]{display:none}
 .frame-tools{
   position:absolute;left:6px;right:6px;bottom:6px;display:flex;align-items:center;gap:2px;
   padding:3px;background:rgba(255,255,255,.95);border:1px solid #E3E9E3;border-radius:6px;
@@ -571,7 +574,7 @@ select.txt{padding-right:24px;appearance:none;
       <div class="ghfield">
         <label for="ghToken">액세스 토큰 (fine-grained PAT)</label>
         <input id="ghToken" type="password" spellcheck="false" autocomplete="off" placeholder="github_pat_...">
-        <span class="sub">이 브라우저에만 저장되고 어디로도 전송되지 않습니다. 저장소 하나에 Contents: Read and write 권한만 주세요.</span>
+        <span class="sub">이 브라우저에만 저장되고 어디로도 전송되지 않습니다. 저장소 하나에 <b>Contents: Read and write</b> 가 필요합니다 (Read만 있으면 읽기만 되고 저장은 실패).</span>
       </div>
       <label class="ghcheck" for="ghAuto">
         <input type="checkbox" id="ghAuto">
@@ -615,7 +618,7 @@ const MOVES=['고정','팬','틸트','달리','트래킹','핸드헬드','크레
 
 const tool={color:'#12171A',size:5,eraser:false};
 const todayKR=()=>{const d=new Date();return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';};
-const blank=()=>({id:nid(),title:'',screen:'',dlg:[{s:'',t:''}],etc:'',canvas:null,size:'',move:'',sec:''});
+const blank=()=>({id:nid(),title:'',screen:'',dlg:[{s:'',t:''}],etc:'',photo:null,ink:null,canvas:null,size:'',move:'',sec:''});
 const DEFAULTS=()=>({
   title:'',cast:'',director:'',ad:'',dop:'',staff:'',
   cols:3,rows:2,showShot:false,frames:Array.from({length:6},blank)
@@ -667,6 +670,8 @@ function normalize(s){
   out.frames.forEach(f=>{
     if(f.audio!==undefined){ if(!f.title) f.title=f.audio; delete f.audio; }
     if(f.etc===undefined) f.etc='';
+    if(f.photo===undefined) f.photo=null;
+    if(f.ink===undefined) f.ink=null;
     f.dlg=migrateDlg(f.dlg,f.line);
     delete f.line;
   });
@@ -869,6 +874,80 @@ function options(list,val,ph){
   return h;
 }
 
+/* ── 사진 캐시 (IndexedDB) ───────────────
+   사진 원본은 저장소의 shots/ 폴더에 파일로 올리고,
+   이 브라우저에는 사본을 캐시해 둔다. JSON에는 경로만 들어간다. */
+const IDB_NAME='slate-img.v1', IDB_STORE='img';
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    if(!window.indexedDB) return rej(new Error('no-idb'));
+    const r=indexedDB.open(IDB_NAME,1);
+    r.onupgradeneeded=()=>{ const d=r.result; if(!d.objectStoreNames.contains(IDB_STORE)) d.createObjectStore(IDB_STORE); };
+    r.onsuccess=()=>res(r.result);
+    r.onerror=()=>rej(r.error||new Error('idb'));
+  });
+}
+async function idbGet(key){
+  try{
+    const db=await idbOpen();
+    return await new Promise((res,rej)=>{
+      const tx=db.transaction(IDB_STORE,'readonly').objectStore(IDB_STORE).get(key);
+      tx.onsuccess=()=>res(tx.result||null); tx.onerror=()=>rej(tx.error);
+    });
+  }catch(e){ return null; }
+}
+async function idbPut(key,blob){
+  try{
+    const db=await idbOpen();
+    await new Promise((res,rej)=>{
+      const tx=db.transaction(IDB_STORE,'readwrite').objectStore(IDB_STORE).put(blob,key);
+      tx.onsuccess=()=>res(); tx.onerror=()=>rej(tx.error);
+    });
+  }catch(e){}
+}
+function ghRawBase(){
+  const parts=ghCfg.repo.replace(/^https?:\/\/github\.com\//i,'').replace(/\/+$/,'').split('/');
+  if(parts.length<2) return '';
+  return 'https://raw.githubusercontent.com/'+parts[0]+'/'+parts[1]+'/'+encodeURIComponent(ghCfg.branch||'main')+'/';
+}
+function toB64(buf){
+  const bytes=new Uint8Array(buf); let out='';
+  const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk){
+    out+=String.fromCharCode.apply(null,bytes.subarray(i,i+chunk));
+  }
+  return btoa(out);
+}
+async function sha1Hex(buf){
+  try{
+    const d=await crypto.subtle.digest('SHA-1',buf);
+    return Array.from(new Uint8Array(d)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,16);
+  }catch(e){
+    let h=0; const u=new Uint8Array(buf);
+    for(let i=0;i<u.length;i+=97) h=((h*31)+u[i])>>>0;
+    return ('00000000'+h.toString(16)).slice(-8)+u.length.toString(16);
+  }
+}
+/* 프레임에 그릴 사진 소스 — 캐시 우선, 없으면 저장소에서 */
+const photoURLs=new Map();
+async function photoSrc(f){
+  if(!f) return '';
+  if(f.photo&&f.photo.path){
+    const key=f.photo.path;
+    if(photoURLs.has(key)) return photoURLs.get(key);
+    const cached=await idbGet(key);
+    if(cached){ const u=URL.createObjectURL(cached); photoURLs.set(key,u); return u; }
+    const url=ghRawBase()+key;
+    try{
+      const r=await fetch(url,{cache:'force-cache'});
+      if(r.ok){ const b=await r.blob(); idbPut(key,b); const u=URL.createObjectURL(b); photoURLs.set(key,u); return u; }
+    }catch(e){}
+    return url;
+  }
+  if(f.canvas) return f.canvas;   /* 옛 방식(합성 PNG) */
+  return '';
+}
+
 /* ── 대사 줄 렌더 ─────────────────────── */
 function cutFrame(cutEl){
   return state.frames.find(x=>x.id===(cutEl&&cutEl.dataset.id));
@@ -915,6 +994,7 @@ function cardEl(f,idx){
       '</div>'+
     '</div>'+
     '<div class="frame">'+
+      '<img class="ph" alt="" data-empty="1">'+
       '<canvas width="'+CW+'" height="'+CH+'"></canvas>'+
       '<div class="hint">이미지 · 스케치<span>도구는 마우스를 올리면 나타납니다</span></div>'+
       '<div class="frame-tools">'+
@@ -974,6 +1054,11 @@ function addTile(){
 }
 
 function renderBoard(){
+  /* 스크롤 보존: innerHTML을 비우는 순간 문서 높이가 0에 가까워져 맨 위로 튀는 것을 막는다 */
+  const sc=document.scrollingElement||document.documentElement;
+  const keepY=sc?sc.scrollTop:0;
+  const prevSB=document.documentElement.style.scrollBehavior;
+  document.documentElement.style.scrollBehavior='auto';
   board.innerHTML='';
   const pp=perPage();
   const total=Math.max(1,Math.ceil(state.frames.length/pp));
@@ -997,6 +1082,8 @@ function renderBoard(){
     board.appendChild(sheet);
   }
   syncCredits(); syncToolUI(); updateStats();
+  if(keepY>0 && sc) sc.scrollTop=keepY;
+  document.documentElement.style.scrollBehavior=prevSB;
 }
 
 /* ── 캔버스 ───────────────────────────── */
@@ -1005,13 +1092,21 @@ function initCanvas(art,f){
   const ctx=cv.getContext('2d');
   ctx.lineCap='round'; ctx.lineJoin='round';
   const undo=[];
-  const obj={cv:cv,ctx:ctx,undo:undo,f:f};
+  const obj={cv:cv,ctx:ctx,undo:undo,f:f,ph:art.querySelector('.ph')};
   art._cv=obj;
 
-  if(f.canvas){
-    const img=new Image();
-    img.onload=()=>{ if(!art.isConnected)return; ctx.clearRect(0,0,CW,CH); ctx.drawImage(img,0,0,CW,CH); };
-    img.src=f.canvas;
+  /* 사진은 <img> 레이어, 캔버스에는 손그림만 담는다 */
+  photoSrc(f).then(src=>{
+    if(!src) return;
+    const ph=obj.ph;
+    ph.onload=()=>{ ph.dataset.empty='0'; art.classList.add('has-ink'); };
+    ph.onerror=()=>{ ph.dataset.empty='1'; };
+    ph.src=src;
+  });
+  if(f.ink){
+    const im=new Image();
+    im.onload=()=>{ if(!art.isConnected)return; ctx.clearRect(0,0,CW,CH); ctx.drawImage(im,0,0,CW,CH); };
+    im.src=f.ink;
     art.classList.add('has-ink');
   }
 
@@ -1024,7 +1119,7 @@ function initCanvas(art,f){
   const pushUndo=()=>{ undo.push(cv.toDataURL()); if(undo.length>12) undo.shift(); };
   obj.pushUndo=pushUndo;
 
-  const commit=()=>{ f.canvas=cv.toDataURL('image/png'); art.classList.add('has-ink'); scheduleSave(); };
+  const commit=()=>{ f.ink=cv.toDataURL('image/png'); art.classList.add('has-ink'); scheduleSave(); };
 
   cv.addEventListener('pointerdown',ev=>{
     if(ev.button!==0 && ev.pointerType==='mouse') return;
@@ -1032,7 +1127,8 @@ function initCanvas(art,f){
     try{ cv.setPointerCapture(ev.pointerId); }catch(e){}
     pushUndo();
     drawing=true; last=pos(ev);
-    ctx.fillStyle=tool.eraser?'#ffffff':tool.color;
+    ctx.globalCompositeOperation=tool.eraser?'destination-out':'source-over';
+    ctx.fillStyle=tool.eraser?'rgba(0,0,0,1)':tool.color;
     const w=Math.max(1,tool.size*last.s);
     ctx.beginPath(); ctx.arc(last.x,last.y,w/2,0,Math.PI*2); ctx.fill();
     art.classList.add('has-ink');
@@ -1041,7 +1137,8 @@ function initCanvas(art,f){
   cv.addEventListener('pointermove',ev=>{
     if(!drawing) return;
     const p=pos(ev);
-    ctx.strokeStyle=tool.eraser?'#ffffff':tool.color;
+    ctx.globalCompositeOperation=tool.eraser?'destination-out':'source-over';
+    ctx.strokeStyle=tool.eraser?'rgba(0,0,0,1)':tool.color;
     ctx.lineWidth=Math.max(1,tool.size*p.s);
     ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke();
     last=p;
@@ -1058,21 +1155,45 @@ function initCanvas(art,f){
 }
 
 function putImage(art,f,file){
+  if(!art._cv){ return; }
+  const c=art._cv, ph=c.ph;
   const url=URL.createObjectURL(file);
-  const img=new Image();
-  img.onload=()=>{
-    if(!art._cv){ URL.revokeObjectURL(url); return; }
-    const c=art._cv;
-    c.pushUndo();
-    c.ctx.save(); c.ctx.fillStyle='#fff'; c.ctx.fillRect(0,0,CW,CH); c.ctx.restore();
-    const s=Math.max(CW/img.width,CH/img.height), w=img.width*s, h=img.height*s;
-    c.ctx.drawImage(img,(CW-w)/2,(CH-h)/2,w,h);
+  ph.onload=()=>{
+    ph.dataset.empty='0';
     art.classList.add('has-ink');
-    f.canvas=c.ctx.canvas.toDataURL('image/png');
-    scheduleSave(); URL.revokeObjectURL(url);
+    delete f.canvas;
+    scheduleSave();
   };
-  img.onerror=()=>{ toast('이미지를 읽지 못했어요'); URL.revokeObjectURL(url); };
-  img.src=url;
+  ph.onerror=()=>toast('이미지를 읽지 못했어요');
+  ph.src=url;
+  /* 원본 바이트 그대로 저장소에 올린다 (화질 손실 없음) */
+  uploadPhoto(f,file).then(path=>{
+    if(!path) return;
+    photoURLs.set(path,url);
+    f.photo={path:path,mime:file.type||'image/jpeg'};
+    scheduleSave();
+  });
+}
+
+/* 사진 파일을 저장소 shots/ 에 커밋 */
+async function uploadPhoto(f,file){
+  if(!ghReady()){ toast('사진은 깃허브에 연결해야 저장됩니다 — 지금은 이 브라우저에만 보관',5200); return ''; }
+  let buf=null;
+  try{ buf=await file.arrayBuffer(); }catch(e){ return ''; }
+  const hash=await sha1Hex(buf);
+  const ext=((file.type||'image/jpeg').split('/')[1]||'jpg').replace('jpeg','jpg').replace('+xml','');
+  const path='shots/'+hash+'.'+ext;
+  try{ await idbPut(path,new Blob([buf],{type:file.type||'image/jpeg'})); }catch(e){}
+  ghSetDot('wait','사진 올리는 중…');
+  try{
+    await ghCommit([{path:path,base64:toB64(buf)}],'SLATE 사진 · '+path);
+    ghSetDot('on','사진 저장됨 ('+(buf.byteLength/1048576).toFixed(1)+'MB)');
+    return path;
+  }catch(err){
+    ghSetDot('err','사진 업로드 실패 — '+String(err.message||err));
+    toast('사진을 깃허브에 올리지 못했어요: '+String(err.message||err),6000);
+    return '';
+  }
 }
 
 /* ── 상호작용 ─────────────────────────── */
@@ -1089,7 +1210,7 @@ board.addEventListener('click',ev=>{
     else if(act==='dup'){ const src=state.frames[i]; const cp=Object.assign({},src,{id:nid()}); state.frames.splice(i+1,0,cp); renderBoard(); scheduleSave(); toast('컷을 복제했어요'); }
     else if(act==='del'){
       const f=state.frames[i];
-      const dirty=(f.title||f.screen||f.etc||f.canvas||f.sec||(f.dlg||[]).some(r=>r.s||r.t));
+      const dirty=(f.title||f.screen||f.etc||f.canvas||f.photo||f.ink||f.sec||(f.dlg||[]).some(r=>r.s||r.t));
       if(dirty && !confirm('이 컷을 삭제할까요? 적어둔 내용과 그림이 함께 사라집니다.')) return;
       state.frames.splice(i,1);
       if(!state.frames.length) state.frames.push(blank());
@@ -1113,10 +1234,12 @@ board.addEventListener('click',ev=>{
       im.src=snap;
     }
     else if(act==='clear'){
-      if(f.canvas && !confirm('이 프레임의 그림과 사진을 모두 지울까요?')) return;
+      if((f.canvas||f.photo||f.ink) && !confirm('이 프레임의 그림과 사진을 모두 지울까요?')) return;
       c.undo.push(c.cv.toDataURL());
       c.ctx.clearRect(0,0,CW,CH);
-      f.canvas=null; art.classList.remove('has-ink'); scheduleSave();
+      if(c.ph){ c.ph.removeAttribute('src'); c.ph.dataset.empty='1'; }
+      f.canvas=null; f.ink=null; f.photo=null;
+      art.classList.remove('has-ink'); scheduleSave();
     }
     return;
   }
@@ -1230,9 +1353,19 @@ function addCut(afterId){
     state.frames.splice(i+1,0,nb);
   } else state.frames.push(nb);
   renderBoard(); scheduleSave();
-  const last=board.querySelector('.cut:last-child');
-  if(last) last.scrollIntoView({behavior:'smooth',block:'center'});
+  revealCut(nb.id);
   return nb;
+}
+
+/* 새 컷이 화면 밖으로 벗어났을 때만 따라간다 */
+function revealCut(id){
+  const el=board.querySelector('.cut[data-id="'+id+'"]');
+  if(!el) return;
+  requestAnimationFrame(function(){
+    const r=el.getBoundingClientRect();
+    const vh=window.innerHeight||0;
+    if(r.top<64 || r.bottom>vh-72) el.scrollIntoView({behavior:'smooth',block:'center'});
+  });
 }
 on('#btnAdd','click',()=>addCut());
 
@@ -1614,6 +1747,18 @@ async function ghTest(quiet){
     if(!quiet) toast('읽기 전용 토큰이에요. Contents: Read and write 권한이 필요합니다.',5200);
     return false;
   }
+  /* 저장소를 '읽을' 수 있는 것과 '쓸' 수 있는 것은 다르다.
+     토큰에 Contents 권한이 없으면 읽기는 통과하고 쓰기만 403이 난다.
+     그래서 작은 blob을 하나 만들어 실제 쓰기 권한까지 확인한다. */
+  const probe=await ghApi('POST',ghRepoUrl('/git/blobs'),{content:'slate-probe','encoding':'utf-8'});
+  if(!probe.ok){
+    const m=(probe.status===403)
+      ? '토큰에 쓰기 권한이 없어요 — Contents 를 Read and write 로 바꿔주세요'
+      : (probe.msg||'쓰기 권한을 확인하지 못했어요');
+    ghSetDot('err',m);
+    if(!quiet) toast(m,6000);
+    return false;
+  }
   ghPulled=ghPulled||false;
   ghSetDot('on','연결됨 · '+r.data.full_name+' ('+ghCfg.branch+')');
   if(!quiet) toast('연결됐어요 — '+r.data.full_name,3600);
@@ -1686,6 +1831,72 @@ async function ghPull(quiet){
   return 'synced';
 }
 
+/* 여러 파일을 한 커밋으로 올린다 */
+async function ghCommit(files,message){
+  const branch=ghCfg.branch||'main';
+  const refRes=await ghApi('GET',ghRepoUrl('/git/ref/heads/'+encodeURIComponent(branch)));
+  let parent=null, baseTree=null;
+  if(refRes.ok) parent=refRes.data.object.sha;
+  else if(refRes.status!==404) throw new Error(refRes.msg||'브랜치를 읽지 못했어요');
+  if(parent){
+    const c=await ghApi('GET',ghRepoUrl('/git/commits/'+parent));
+    if(!c.ok) throw new Error(c.msg||'커밋을 읽지 못했어요');
+    baseTree=c.data.tree.sha;
+  }
+  const entries=[];
+  for(const it of files){
+    const body=it.base64?{content:it.base64,encoding:'base64'}:{content:it.text,encoding:'utf-8'};
+    const b=await ghApi('POST',ghRepoUrl('/git/blobs'),body);
+    if(!b.ok) throw new Error(b.msg||'업로드 실패');
+    entries.push({path:it.path,mode:'100644',type:'blob',sha:b.data.sha});
+  }
+  const treeBody={tree:entries};
+  if(baseTree) treeBody.base_tree=baseTree;
+  const tree=await ghApi('POST',ghRepoUrl('/git/trees'),treeBody);
+  if(!tree.ok) throw new Error(tree.msg||'트리 생성 실패');
+  const commit=await ghApi('POST',ghRepoUrl('/git/commits'),
+    {message:message,tree:tree.data.sha,parents:parent?[parent]:[]});
+  if(!commit.ok) throw new Error(commit.msg||'커밋 생성 실패');
+  let upd;
+  if(parent) upd=await ghApi('PATCH',ghRepoUrl('/git/refs/heads/'+encodeURIComponent(branch)),{sha:commit.data.sha,force:false});
+  else upd=await ghApi('POST',ghRepoUrl('/git/refs'),{ref:'refs/heads/'+branch,sha:commit.data.sha});
+  if(!upd.ok){
+    if(upd.status===422||upd.status===409){
+      const again=await ghApi('PATCH',ghRepoUrl('/git/refs/heads/'+encodeURIComponent(branch)),{sha:commit.data.sha,force:false});
+      if(!again.ok) throw new Error('원격이 계속 바뀌고 있어요 — 잠시 뒤 다시 시도해 주세요');
+    }else throw new Error(upd.msg||'브랜치 갱신 실패');
+  }
+  return commit.data.sha;
+}
+
+/* 옛 방식(합성 PNG)으로 저장된 프레임을 사진 파일로 옮긴다.
+   한 번만 실행되고, 옮기면 JSON이 4.9MB → 수십 KB로 줄어든다. */
+let migrated=false;
+async function migrateLegacyPhotos(){
+  if(migrated||!ghReady()) return;
+  migrated=true;
+  const list=[];
+  state.frames.forEach(f=>{
+    if(f.canvas&&!f.photo&&/^data:image\//.test(f.canvas)) list.push(f);
+  });
+  if(!list.length) return;
+  ghSetDot('wait','기존 사진을 파일로 옮기는 중…');
+  for(const f of list){
+    try{
+      const res=await fetch(f.canvas);
+      const blob=await res.blob();
+      const buf=await blob.arrayBuffer();
+      const hash=await sha1Hex(buf);
+      const path='shots/'+hash+'.png';
+      await idbPut(path,blob);
+      await ghCommit([{path:path,base64:toB64(buf)}],'SLATE 사진 정리 · '+path);
+      f.photo={path:path,mime:'image/png'};
+      f.canvas=null;
+    }catch(e){ /* 실패하면 그 프레임은 그대로 둔다 */ }
+  }
+  saveState();
+}
+
 /* 올리기 — Git Data API (용량 큰 스케치도 안전) */
 async function ghPush(quiet){
   if(!ghReady()) return false;
@@ -1697,50 +1908,26 @@ async function ghPush(quiet){
   ghBusy=true;
   ghSetDot('wait','올리는 중…');
   try{
-    const payload=JSON.stringify(bundleObj());
-    const branch=ghCfg.branch||'main';
-    let refRes=await ghApi('GET',ghRepoUrl('/git/ref/heads/'+encodeURIComponent(branch)));
-    let parent=null, baseTree=null;
-    if(refRes.ok){ parent=refRes.data.object.sha; }
-    else if(refRes.status!==404){ throw new Error(refRes.msg||'브랜치를 읽지 못했어요'); }
-    if(parent){
-      const c=await ghApi('GET',ghRepoUrl('/git/commits/'+parent));
-      if(!c.ok) throw new Error(c.msg||'커밋을 읽지 못했어요');
-      baseTree=c.data.tree.sha;
-    }
-    const blob=await ghApi('POST',ghRepoUrl('/git/blobs'),{content:payload,encoding:'utf-8'});
-    if(!blob.ok) throw new Error(blob.msg||'업로드 실패');
-    const treeBody={tree:[{path:ghCfg.path,mode:'100644',type:'blob',sha:blob.data.sha}]};
-    if(baseTree) treeBody.base_tree=baseTree;
-    const tree=await ghApi('POST',ghRepoUrl('/git/trees'),treeBody);
-    if(!tree.ok) throw new Error(tree.msg||'트리 생성 실패');
+    await migrateLegacyPhotos();
     const now=new Date();
     const msg='SLATE 자동 저장 · '+now.getFullYear()+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+
       String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+
       ' ('+index.items.length+'개 프로젝트)';
-    const commitBody={message:msg,tree:tree.data.sha,parents:parent?[parent]:[]};
-    const commit=await ghApi('POST',ghRepoUrl('/git/commits'),commitBody);
-    if(!commit.ok) throw new Error(commit.msg||'커밋 생성 실패');
-    let upd;
-    if(parent){
-      upd=await ghApi('PATCH',ghRepoUrl('/git/refs/heads/'+encodeURIComponent(branch)),{sha:commit.data.sha,force:false});
-    }else{
-      upd=await ghApi('POST',ghRepoUrl('/git/refs'),{ref:'refs/heads/'+branch,sha:commit.data.sha});
-    }
-    if(!upd.ok){
-      if(upd.status===422||upd.status===409){
-        const again=await ghApi('PATCH',ghRepoUrl('/git/refs/heads/'+encodeURIComponent(branch)),{sha:commit.data.sha,force:false});
-        if(!again.ok) throw new Error('원격이 계속 바뀌고 있어요 — 잠시 뒤 다시 시도해 주세요');
-      }else throw new Error(upd.msg||'브랜치 갱신 실패');
-    }
+    await ghCommit([{path:ghCfg.path,text:JSON.stringify(bundleObj())}],msg);
     ghCfg.lastSync=Date.now(); ghStore(ghCfg);
     ghDirty=false;
     ghSetDot('on','동기화됨 · '+ghTime());
     if(!quiet) toast('깃허브에 올렸어요 · '+ghTime(),3200);
     return true;
   }catch(err){
-    ghSetDot('err',String(err.message||err));
-    if(!quiet) toast(String(err.message||err),5200);
+    let m=String(err.message||err);
+    if(/403/.test(m)||/권한/.test(m)){
+      m='쓰기 권한이 없어요 — GitHub에서 토큰의 Contents 권한을 Read and write 로 바꿔주세요';
+    }
+    ghSetDot('err',m);
+    ghEl.status.textContent=m;
+    ghEl.modal.hidden=false; ghFill();
+    toast(m,7000);
     return false;
   }finally{
     ghBusy=false;
@@ -1785,6 +1972,10 @@ function ghInit(){
     ghPulled=false;
     if(!ghCfg.token){ ghSetDot('','토큰이 비어 있어요 — 동기화 꺼짐'); toast('설정을 비웠어요'); return; }
     const ok=await ghTest(true);
+    if(!ok){
+      ghEl.status.textContent=ghEl.status.textContent;
+      return;   /* 실패 사유를 모달에 남겨둔다 */
+    }
     if(ok){
       const p=await ghPull(true);
       ghClose();
