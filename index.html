@@ -1896,9 +1896,26 @@ on('#sizebar','click',ev=>{
 });
 
 /* 인쇄 */
+/* ── 인쇄/PDF 파일 이름 ──────────────────
+   브라우저는 document.title 을 PDF 파일 이름으로 제안한다.
+   '[스토리보드] 제목' 형태로 맞춰두고, 인쇄가 끝나면 원래 제목으로 되돌린다. */
+let titleBeforePrint=null;
+function pdfName(){
+  let t=String(state.title||'').replace(/\s+/g,' ').trim();
+  t=t.replace(/[\\/:*?"<>|]/g,'').replace(/^\.+|\.+$/g,'').trim();
+  if(!t) t='제목 없음';
+  if(t.length>80) t=t.slice(0,80).trim();
+  return '[스토리보드] '+t;
+}
+function setPrintTitle(){ if(titleBeforePrint===null) titleBeforePrint=document.title; document.title=pdfName(); }
+function restoreTitle(){ if(titleBeforePrint!==null){ document.title=titleBeforePrint; titleBeforePrint=null; } }
+window.addEventListener('beforeprint',setPrintTitle);
+window.addEventListener('afterprint',restoreTitle);
 on('#btnPrint','click',()=>{
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  setPrintTitle();
   setTimeout(()=>window.print(),60);
+  setTimeout(restoreTitle,60000);
 });
 
 /* JSON 저장 / 불러오기 */
